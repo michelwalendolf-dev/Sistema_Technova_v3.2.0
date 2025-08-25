@@ -1,0 +1,90 @@
+[
+    {
+        "tipo": "funcionario",
+        "nome": "Lucas Pereira",
+        "cpf": "987.654.321-00",
+        "data_nasc": "15/05/1985",
+        "departamento": "TI",
+        "setor": "Desenvolvimento",
+        "data_admissao": "10/02/2020",
+        "email": "lucas.pereira@email.com",
+        "idade": 40
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Amanda Ribeiro",
+        "cpf": "N/A",
+        "data_nasc": "03/05/2001",
+        "departamento": "Suporte T\u00e9cnico",
+        "setor": "Suporte",
+        "data_admissao": "15/03/2021",
+        "email": "amanda.ribeiro@email.com",
+        "idade": 24
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Thiago Martins",
+        "cpf": "N/A",
+        "data_nasc": "17/09/1993",
+        "departamento": "Comercial",
+        "setor": "Comercial",
+        "data_admissao": "29/07/2022",
+        "email": "thiago.martins@email.com",
+        "idade": 31
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Juliana Costa",
+        "cpf": "N/A",
+        "data_nasc": "22/01/2017",
+        "departamento": "Comercial",
+        "setor": "Comercial",
+        "data_admissao": "04/11/2023",
+        "email": "juliana.costa@email.com",
+        "idade": 8
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Bruno Fernandes",
+        "cpf": "N/A",
+        "data_nasc": "08/08/1989",
+        "departamento": "Suporte T\u00e9cnico",
+        "setor": "Suporte",
+        "data_admissao": "18/01/2024",
+        "email": "bruno.fernandes@email.com",
+        "idade": 35
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Camila Ara\u00fajo",
+        "cpf": "N/A",
+        "data_nasc": "30/11/2010",
+        "departamento": "Comercial",
+        "setor": "Comercial",
+        "data_admissao": "06/06/2025",
+        "email": "camila.araujo@email.com",
+        "idade": 14
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Rafael Lima",
+        "cpf": "N/A",
+        "data_nasc": "14/04/2023",
+        "departamento": "TI",
+        "setor": "Desenvolvimento",
+        "data_admissao": "23/09/2021",
+        "email": "rafael.lima@email.co",
+        "idade": 2
+    },
+    {
+        "tipo": "funcionario",
+        "nome": "Juliana Ribeiro",
+        "cpf": "N/A",
+        "data_nasc": "26/06/1978",
+        "departamento": "Suporte T\u00e9cnico",
+        "setor": "Suporte",
+        "data_admissao": "12/12/2024",
+        "email": "juliana.ribeiro@email.com",
+        "idade": 47
+    }
+]

@@ -1,0 +1,39 @@
+[
+    {
+        "nome": "Caramelo Caramelato do Caf\u00e9 Preto",
+        "data": "11/07/2025",
+        "setor": "Desenvolvimento",
+        "usuario": "dev1",
+        "senha": "1234",
+        "foto": "fotos\\dev1.png",
+        "data_nasc": "11/09/2001",
+        "departamento": "TI",
+        "email": "caramelo@gmail.com",
+        "filtro": "Desenvolvimento",
+        "idade": 23
+    },
+    {
+        "nome": "teste2",
+        "data_nasc": "11/11/1111",
+        "departamento": "TI",
+        "setor": "Desenvolvimento",
+        "usuario": "dev2",
+        "senha": "1234",
+        "email": "teste2@gmail.com",
+        "filtro": "Desenvolvimento",
+        "idade": 913,
+        "foto": "fotos\\dev2.png"
+    },
+    {
+        "nome": "teste3",
+        "data_nasc": "11/11/1111",
+        "departamento": "TI",
+        "setor": "Desenvolvimento",
+        "usuario": "dev3",
+        "senha": "1234",
+        "email": "dev3testedecadastro@gmail.com",
+        "filtro": "Desenvolvimento",
+        "idade": 913,
+        "foto": "fotos\\dev3.png"
+    }
+]
