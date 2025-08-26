@@ -26,12 +26,10 @@ class JanelaProduto(ctk.CTkToplevel):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
         
-        # Frame do cabeçalho com abas
         frame_cabecalho = ctk.CTkFrame(self, height=40)
         frame_cabecalho.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 0))
         frame_cabecalho.grid_propagate(False)
         
-        # Abas
         self.aba_cadastro = ctk.CTkButton(
             frame_cabecalho,
             text="Cadastro",
@@ -58,7 +56,6 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.aba_anexo.pack(side="left", padx=5, pady=5)
         
-        # Botões de ação
         frame_botoes = ctk.CTkFrame(frame_cabecalho, fg_color="transparent")
         frame_botoes.pack(side="right", padx=10, pady=5)
         
@@ -86,7 +83,6 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         btn_salvar.pack(side="right", padx=5)
         
-        # Frame principal para o conteúdo das abas
         self.frame_conteudo = ctk.CTkFrame(self)
         self.frame_conteudo.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         self.frame_conteudo.grid_columnconfigure(0, weight=1)
@@ -123,11 +119,9 @@ class JanelaProduto(ctk.CTkToplevel):
         for widget in self.frame_conteudo.winfo_children():
             widget.destroy()
             
-        # Frame principal com scrollbar
         main_frame = ctk.CTkFrame(self.frame_conteudo, fg_color="white")
         main_frame.pack(fill="both", expand=True)
         
-        # Canvas para scrollbar
         canvas = tk.Canvas(main_frame, bg="white", highlightthickness=0)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ctk.CTkFrame(canvas, fg_color="white")
@@ -143,18 +137,15 @@ class JanelaProduto(ctk.CTkToplevel):
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Frame principal com duas colunas
         frame_principal = ctk.CTkFrame(scrollable_frame, fg_color="white")
         frame_principal.pack(fill="both", expand=True, padx=10, pady=10)
         frame_principal.grid_columnconfigure(0, weight=1)
         frame_principal.grid_columnconfigure(1, weight=1)
         frame_principal.grid_rowconfigure(0, weight=1)
         
-        # Coluna esquerda
         frame_esquerda = ctk.CTkFrame(frame_principal, fg_color="white")
         frame_esquerda.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=10)
         
-        # Código sequencial (não editável)
         lbl_cod_seq = ctk.CTkLabel(frame_esquerda, text="Código Sequencial:", anchor="w", text_color="black")
         lbl_cod_seq.pack(fill="x", pady=(0, 5))
         
@@ -167,42 +158,36 @@ class JanelaProduto(ctk.CTkToplevel):
         self.entry_cod_seq.insert(0, self.codigo_sequencial)
         self.entry_cod_seq.pack(fill="x", pady=(0, 10))
         
-        # Marca
         lbl_marca = ctk.CTkLabel(frame_esquerda, text="Marca:", anchor="w", text_color="black")
         lbl_marca.pack(fill="x", pady=(0, 5))
         
         self.entry_marca = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_marca.pack(fill="x", pady=(0, 10))
         
-        # Preço médio (Valor)
         lbl_valor = ctk.CTkLabel(frame_esquerda, text="Preço Médio (R$):", anchor="w", text_color="black")
         lbl_valor.pack(fill="x", pady=(0, 5))
         
         self.entry_valor = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_valor.pack(fill="x", pady=(0, 10))
         
-        # Peso
         lbl_peso = ctk.CTkLabel(frame_esquerda, text="Peso (kg):", anchor="w", text_color="black")
         lbl_peso.pack(fill="x", pady=(0, 5))
         
         self.entry_peso = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_peso.pack(fill="x", pady=(0, 10))
         
-        # Altura
         lbl_altura = ctk.CTkLabel(frame_esquerda, text="Altura (cm):", anchor="w", text_color="black")
         lbl_altura.pack(fill="x", pady=(0, 5))
         
         self.entry_altura = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_altura.pack(fill="x", pady=(0, 10))
         
-        # Largura
         lbl_largura = ctk.CTkLabel(frame_esquerda, text="Largura (cm):", anchor="w", text_color="black")
         lbl_largura.pack(fill="x", pady=(0, 5))
         
         self.entry_largura = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_largura.pack(fill="x", pady=(0, 10))
         
-        # Tipo de produto (combobox)
         lbl_tipo = ctk.CTkLabel(frame_esquerda, text="Tipo de Produto:", anchor="w", text_color="black")
         lbl_tipo.pack(fill="x", pady=(0, 5))
         
@@ -216,25 +201,21 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.combo_tipo.pack(fill="x", pady=(0, 10))
         
-        # Coluna direita
         frame_direita = ctk.CTkFrame(frame_principal, fg_color="white")
         frame_direita.grid(row=0, column=1, sticky="nsew", padx=(10, 0), pady=10)
         
-        # Código personalizado
         lbl_cod_pers = ctk.CTkLabel(frame_direita, text="Código:", anchor="w", text_color="black")
         lbl_cod_pers.pack(fill="x", pady=(0, 5))
         
         self.entry_cod_pers = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
         self.entry_cod_pers.pack(fill="x", pady=(0, 10))
         
-        # Nome do produto
         lbl_nome = ctk.CTkLabel(frame_direita, text="Nome:", anchor="w", text_color="black")
         lbl_nome.pack(fill="x", pady=(0, 5))
         
         self.entry_nome = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
         self.entry_nome.pack(fill="x", pady=(0, 10))
         
-        # Grupo de produto (combobox)
         lbl_grupo = ctk.CTkLabel(frame_direita, text="Grupo de Produto:", anchor="w", text_color="black")
         lbl_grupo.pack(fill="x", pady=(0, 5))
         
@@ -248,7 +229,6 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.combo_grupo.pack(fill="x", pady=(0, 10))
         
-        # Estoque (combobox)
         lbl_estoque = ctk.CTkLabel(frame_direita, text="Estoque:", anchor="w", text_color="black")
         lbl_estoque.pack(fill="x", pady=(0, 5))
         
@@ -262,32 +242,27 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.combo_estoque.pack(fill="x", pady=(0, 10))
         
-        # Fornecedor
         lbl_fornecedor = ctk.CTkLabel(frame_direita, text="Fornecedor:", anchor="w", text_color="black")
         lbl_fornecedor.pack(fill="x", pady=(0, 5))
         
         self.entry_fornecedor = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
         self.entry_fornecedor.pack(fill="x", pady=(0, 10))
         
-        # Quantidade de estoque
         lbl_qtd_estoque = ctk.CTkLabel(frame_direita, text="Quantidade em Estoque:", anchor="w", text_color="black")
         lbl_qtd_estoque.pack(fill="x", pady=(0, 5))
         
         self.entry_qtd_estoque = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
         self.entry_qtd_estoque.pack(fill="x", pady=(0, 20))
         
-        # Frame para checkboxes
         checkbox_frame = ctk.CTkFrame(frame_direita, fg_color="white")
         checkbox_frame.pack(fill="x", pady=(0, 10))
         
-        # Checkboxes em duas colunas
         checkbox_left = ctk.CTkFrame(checkbox_frame, fg_color="white")
         checkbox_left.pack(side="left", fill="both", expand=True)
         
         checkbox_right = ctk.CTkFrame(checkbox_frame, fg_color="white")
         checkbox_right.pack(side="right", fill="both", expand=True)
         
-        # Checkboxes - coluna esquerda
         self.var_controla_serie = ctk.BooleanVar()
         self.check_controla_serie = ctk.CTkCheckBox(
             checkbox_left, 
@@ -307,7 +282,6 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.check_validade.pack(fill="x", pady=(0, 5))
         
-        # Checkboxes - coluna direita
         self.var_inativo = ctk.BooleanVar()
         self.check_inativo = ctk.CTkCheckBox(
             checkbox_right, 
@@ -326,7 +300,6 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.check_brinde.pack(fill="x", pady=(0, 5))
         
-        # Configurar o canvas para scroll
         def on_mousewheel(event):
             canvas.yview_scroll(int(-1*(event.delta/120)), "units")
         
@@ -453,11 +426,9 @@ class JanelaProduto(ctk.CTkToplevel):
         self.destroy()
     
     def preencher_campos(self):
-        # Preencher os campos com os dados do produto
         if not self.produto:
             return
             
-        # Preencher campos da coluna esquerda
         self.entry_cod_seq.configure(state="normal")
         self.entry_cod_seq.delete(0, "end")
         self.entry_cod_seq.insert(0, self.produto.get("codigo_sequencial", ""))
@@ -470,7 +441,6 @@ class JanelaProduto(ctk.CTkToplevel):
         self.entry_largura.insert(0, self.produto.get("largura", ""))
         self.combo_tipo.set(self.produto.get("tipo", ""))
         
-        # Preencher campos da coluna direita
         self.entry_cod_pers.insert(0, self.produto.get("codigo", "").replace("COD", ""))
         self.entry_nome.insert(0, self.produto.get("nome", ""))
         self.combo_grupo.set(self.produto.get("grupo", ""))
@@ -478,14 +448,12 @@ class JanelaProduto(ctk.CTkToplevel):
         self.entry_fornecedor.insert(0, self.produto.get("fornecedor", ""))
         self.entry_qtd_estoque.insert(0, self.produto.get("estoque", "").replace(" unidades", ""))
         
-        # Preencher checkboxes
         self.var_controla_serie.set(self.produto.get("controla_serie", False))
         self.var_inativo.set(self.produto.get("inativo", False))
         self.var_validade.set(self.produto.get("por_validade", False))
         self.var_brinde.set(self.produto.get("brinde", False))
     
     def salvar_produto(self):
-        # Verificar se está desmarcando o controla_serie e há séries cadastradas
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
             not self.var_controla_serie.get() and
@@ -498,9 +466,8 @@ class JanelaProduto(ctk.CTkToplevel):
                 parent=self
             )
             if not resposta:
-                return  # Não prossegue com o salvamento
+                return  
         
-        # Coletar dados do formulário
         dados = {
             "codigo_sequencial": self.entry_cod_seq.get(),
             "marca": self.entry_marca.get(),
@@ -522,23 +489,18 @@ class JanelaProduto(ctk.CTkToplevel):
             "serie": "✔️" if self.var_controla_serie.get() else "❌"
         }
         
-        # Se estiver editando, atualizar o produto existente
         if self.produto:
             for i, produto in enumerate(self.parent.dados_produtos):
                 if produto["codigo"] == self.produto["codigo"]:
                     self.parent.dados_produtos[i] = dados
                     break
         else:
-            # Adicionar novo produto
             self.parent.dados_produtos.append(dados)
         
-        # Salvar dados no JSON
         self.parent.salvar_dados_json()
         
-        # Atualizar a treeview
         self.parent.atualizar_treeview_produtos()
         
-        # Fechar a janela
         self.destroy()
 
 class App(ctk.CTk):
@@ -570,7 +532,6 @@ class App(ctk.CTk):
             print(f"Erro ao carregar marca d'água: {e}")
             self.marcadagua_ctk_image = None
 
-        # Carregar dados de arquivos JSON
         self.carregar_dados_json()
 
         self.produto_selecionado = None
@@ -582,7 +543,6 @@ class App(ctk.CTk):
             with open('produtos.json', 'r') as f:
                 self.dados_produtos = json.load(f)
         except FileNotFoundError:
-            # Dados de exemplo se o arquivo não existir
             self.dados_produtos = []
             for i in range(1, 21):
                 controla_serie = "✔️" if i % 2 == 0 else "❌"
@@ -600,7 +560,6 @@ class App(ctk.CTk):
             with open('series.json', 'r') as f:
                 self.dados_series = json.load(f)
         except FileNotFoundError:
-            # Dados de exemplo se o arquivo não existir
             self.dados_series = {
                 "COD002": [
                     {"serie": "SERIE-0001", "alternativa": "ALT-001", "estoque": "Estoque 1", "status": "Ativa"},
@@ -630,8 +589,8 @@ class App(ctk.CTk):
     
     def abrir_janela_produto(self, produto=None):
         janela = JanelaProduto(self, produto)
-        janela.grab_set()  # Tornar a janela modal
-        janela.focus_set()  # Dar foco à janela
+        janela.grab_set()  
+        janela.focus_set()  
     
     def editar_produto(self):
         selected = self.treeview_produtos.selection()
@@ -639,7 +598,6 @@ class App(ctk.CTk):
             item = self.treeview_produtos.item(selected[0])
             valores = item['values']
             
-            # Encontrar o produto completo nos dados
             for produto in self.dados_produtos:
                 if produto["codigo"] == valores[1]:  # valores[1] é o código
                     self.abrir_janela_produto(produto)
@@ -650,25 +608,20 @@ class App(ctk.CTk):
         if selected:
             item = self.treeview_produtos.item(selected[0])
             valores = item['values']
-            codigo = valores[1]  # O código está na segunda coluna
+            codigo = valores[1]  
             
-            # Confirmar exclusão
             resposta = messagebox.askyesno("Confirmar Exclusão", f"Tem certeza que deseja excluir o produto {valores[2]}?")
             if resposta:
-                # Remover o produto
                 for i, produto in enumerate(self.dados_produtos):
                     if produto["codigo"] == codigo:
                         del self.dados_produtos[i]
                         break
                 
-                # Remover séries associadas se existirem
                 if codigo in self.dados_series:
                     del self.dados_series[codigo]
                 
-                # Salvar dados no JSON
                 self.salvar_dados_json()
                 
-                # Atualizar a treeview
                 self.atualizar_treeview_produtos()
                 
                 messagebox.showinfo("Sucesso", "Produto excluído com sucesso!")
@@ -676,11 +629,9 @@ class App(ctk.CTk):
             messagebox.showwarning("Aviso", "Nenhum produto selecionado para excluir.")
     
     def atualizar_treeview_produtos(self):
-        # Limpar a treeview
         for item in self.treeview_produtos.get_children():
             self.treeview_produtos.delete(item)
         
-        # Adicionar os produtos atualizados
         for produto in self.dados_produtos:
             self.treeview_produtos.insert("", "end", values=(
                 produto["serie"],
@@ -692,35 +643,31 @@ class App(ctk.CTk):
             ))
     
     def pesquisar_produtos(self):
-        # Obter todos os campos de entrada de filtro
         filtro_entries = [entry.get().lower() for entry in self.filtro_entries]
         
-        # Limpar a treeview
         for item in self.treeview_produtos.get_children():
             self.treeview_produtos.delete(item)
         
-        # Aplicar filtros
         for produto in self.dados_produtos:
-            # Verificar se o produto corresponde aos critérios de filtro
             corresponde = True
             for i, filtro in enumerate(filtro_entries):
-                if filtro:  # Se o filtro não estiver vazio
+                if filtro:  
                     campo = ""
-                    if i == 0:  # Série
+                    if i == 0:  
                         campo = produto["serie"].lower()
-                    elif i == 1:  # Código
+                    elif i == 1:  
                         campo = produto["codigo"].lower()
-                    elif i == 2:  # Descrição
+                    elif i == 2:  
                         campo = produto["nome"].lower()
-                    elif i == 3:  # Grupo de produtos
+                    elif i == 3:  
                         campo = produto.get("grupo", "").lower()
-                    elif i == 4:  # Status
+                    elif i == 4:  
                         campo = produto.get("status", "").lower()
-                    elif i == 5:  # Quantidade
+                    elif i == 5:  
                         campo = produto["estoque"].lower()
-                    elif i == 6:  # Nome
+                    elif i == 6:  
                         campo = produto["nome"].lower()
-                    elif i == 7:  # Marca
+                    elif i == 7:  
                         campo = produto["marca"].lower()
                     
                     if filtro not in campo:
@@ -738,10 +685,8 @@ class App(ctk.CTk):
                 ))
     
     def pesquisar_series(self):
-        # Obter todos os campos de entrada de filtro
         filtro_entries = [entry.get().lower() for entry in self.filtro_series_entries]
         
-        # Encontrar a treeview de séries
         for widget in self.frame_conteudo_abas.winfo_children():
             if isinstance(widget, ctk.CTkFrame):
                 for child in widget.winfo_children():
@@ -749,22 +694,20 @@ class App(ctk.CTk):
                         treeview_series = child
                         break
         
-        # Limpar a treeview
         for item in treeview_series.get_children():
             treeview_series.delete(item)
         
-        # Aplicar filtros
         if self.produto_selecionado in self.dados_series:
             for serie in self.dados_series[self.produto_selecionado]:
                 corresponde = True
                 for i, filtro in enumerate(filtro_entries):
-                    if filtro:  # Se o filtro não estiver vazio
+                    if filtro:  
                         campo = ""
-                        if i == 0:  # Série
+                        if i == 0:
                             campo = serie["serie"].lower()
-                        elif i == 1:  # Série Alternativa
+                        elif i == 1:
                             campo = serie["alternativa"].lower()
-                        elif i == 2:  # Status
+                        elif i == 2:
                             campo = serie["status"].lower()
                         
                         if filtro not in campo:
@@ -969,12 +912,10 @@ class App(ctk.CTk):
         frame_produtos = ctk.CTkFrame(self.area_conteudo, fg_color="white")
         frame_produtos.pack(fill="both", expand=True, padx=0, pady=0)
 
-        # Frame para as abas
         frame_abas = ctk.CTkFrame(frame_produtos, height=40, fg_color="#f0f0f0")
         frame_abas.pack(fill="x", pady=0)
         frame_abas.pack_propagate(False)
         
-        # Criar as abas
         self.aba_produtos = ctk.CTkButton(
             frame_abas,
             text="Produtos",
@@ -998,7 +939,7 @@ class App(ctk.CTk):
             text_color="white",
             font=ctk.CTkFont(size=14),
             command=self.mostrar_aba_series,
-            state="disabled"  # Inicialmente desabilitada
+            state="disabled"  
         )
         self.aba_series.pack(side="left", padx=5, pady=5)
 
@@ -1034,7 +975,6 @@ class App(ctk.CTk):
         )
         btn_editar.pack(side="left", padx=5, pady=10)
 
-        # Botão de excluir (substituindo o de anexo)
         btn_excluir = ctk.CTkButton(
             frame_cabecario_produtos,
             text="Excluir",
@@ -1085,19 +1025,15 @@ class App(ctk.CTk):
         )
         btn_sair.pack(side="right", padx=10, pady=10)
 
-        # Frame principal que conterá o conteúdo das abas
         self.frame_conteudo_abas = ctk.CTkFrame(frame_produtos, fg_color="white")
         self.frame_conteudo_abas.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # Inicialmente mostrar a aba de produtos
         self.mostrar_aba_produtos()
 
     def mostrar_aba_produtos(self):
-        # Atualizar aparência dos botões das abas
         self.aba_produtos.configure(fg_color="#4CAF50", font=ctk.CTkFont(size=14, weight="bold"))
         self.aba_series.configure(fg_color="#9E9E9E", font=ctk.CTkFont(size=14))
         
-        # Limpar o frame de conteúdo
         for widget in self.frame_conteudo_abas.winfo_children():
             widget.destroy()
             
@@ -1121,7 +1057,7 @@ class App(ctk.CTk):
             "Status", "Quantidade", "Nome", "Marca"
         ]
 
-        self.filtro_entries = []  # Lista para armazenar as entradas de filtro
+        self.filtro_entries = []  
 
         for campo in campos_filtro:
             campo_frame = ctk.CTkFrame(filtros_frame, fg_color="#e9e9e9", height=40)
@@ -1140,7 +1076,7 @@ class App(ctk.CTk):
                 text_color="black"
             )
             entry.grid(row=0, column=0, sticky="ew", padx=(2, 0), pady=2)
-            self.filtro_entries.append(entry)  # Adicionar à lista
+            self.filtro_entries.append(entry)  
             
             btn_clear = ctk.CTkButton(
                 campo_frame,
@@ -1151,11 +1087,10 @@ class App(ctk.CTk):
                 hover_color="#c0c0c0",
                 text_color="black",
                 corner_radius=5,
-                command=lambda e=entry: e.delete(0, 'end')  # Corrigido para limpar o campo
+                command=lambda e=entry: e.delete(0, 'end')  
             )
             btn_clear.grid(row=0, column=1, padx=(2, 2), pady=2)
 
-        # Botão de pesquisa
         btn_pesquisar = ctk.CTkButton(
             filtros_frame,
             text="🔍 Pesquisar",
@@ -1169,6 +1104,11 @@ class App(ctk.CTk):
 
         lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
+
+        stilo = ttk.Style()
+        stilo.theme_use("clam")
+        stilo.configure("Treeview.Heading", font=("Arial", 14, "bold"), background="#ebebeb")
+        stilo.configure("Treeview", font=("Arial", 11))
 
         colunas = ("serie", "codigo", "nome", "marca", "valor", "estoque")
         self.treeview_produtos = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
@@ -1210,11 +1150,9 @@ class App(ctk.CTk):
             item = self.treeview_produtos.item(selected[0])
             valores = item['values']
             
-            # Verifica se o produto é controlado por série (✔️)
             if valores and valores[0] == "✔️":
                 self.aba_series.configure(state="normal", fg_color="#4CAF50", hover_color="#45a049")
-                self.produto_selecionado = valores[1]  # código do produto
-                # Buscar informações completas do produto selecionado
+                self.produto_selecionado = valores[1]  
                 for produto in self.dados_produtos:
                     if produto["codigo"] == self.produto_selecionado:
                         self.produto_selecionado_info = produto
@@ -1225,11 +1163,9 @@ class App(ctk.CTk):
                 self.produto_selecionado_info = None
 
     def mostrar_aba_series(self):
-        # Só permite abrir a aba se houver um produto selecionado e ele for controlado por série
         if not hasattr(self, 'produto_selecionado') or not self.produto_selecionado:
             return
             
-        # Atualizar aparência das abas
         self.aba_produtos.configure(fg_color="#9E9E9E", font=ctk.CTkFont(size=14))
         self.aba_series.configure(fg_color="#4CAF50", font=ctk.CTkFont(size=14, weight="bold"))
 
@@ -1239,7 +1175,6 @@ class App(ctk.CTk):
         frame_principal = ctk.CTkFrame(self.frame_conteudo_abas, fg_color="white")
         frame_principal.pack(fill="both", expand=True)
 
-        # Frame para informações do produto selecionado
         info_frame = ctk.CTkFrame(frame_principal, height=40, fg_color="#e8f5e9")
         info_frame.pack(fill="x", pady=(0, 10))
         info_frame.pack_propagate(False)
@@ -1254,7 +1189,6 @@ class App(ctk.CTk):
             )
             info_label.pack(side="left", padx=10, pady=10)
 
-        # Verificar se o produto é controlado por série
         produto_info = None
         for produto in self.dados_produtos:
             if produto["codigo"] == self.produto_selecionado:
@@ -1262,7 +1196,6 @@ class App(ctk.CTk):
                 break
 
         if produto_info and produto_info["serie"] == "❌":
-            # Produto não é controlado por série
             mensagem_frame = ctk.CTkFrame(frame_principal, fg_color="white")
             mensagem_frame.pack(fill="both", expand=True)
             
@@ -1275,7 +1208,6 @@ class App(ctk.CTk):
             mensagem_label.place(relx=0.5, rely=0.5, anchor="center")
             return
 
-        # Restante do código para exibir as séries (apenas para produtos controlados por série)
         filtros_frame = ctk.CTkFrame(frame_principal, width=250, fg_color="#f9f9f9")
         filtros_frame.pack(side="left", fill="y", padx=(0, 10))
         filtros_frame.pack_propagate(False)
@@ -1290,7 +1222,7 @@ class App(ctk.CTk):
 
         campos_filtro = ["Série", "Série Alternativa", "Status"]
 
-        self.filtro_series_entries = []  # Lista para armazenar as entradas de filtro de séries
+        self.filtro_series_entries = []  
 
         for campo in campos_filtro:
             campo_frame = ctk.CTkFrame(filtros_frame, fg_color="#e9e9e9", height=40)
@@ -1320,11 +1252,10 @@ class App(ctk.CTk):
                 hover_color="#c0c0c0",
                 text_color="black",
                 corner_radius=5,
-                command=lambda e=entry: e.delete(0, 'end')  # Corrigido para limpar o campo
+                command=lambda e=entry: e.delete(0, 'end')
             )
             btn_clear.grid(row=0, column=1, padx=(2, 2), pady=2)
 
-        # Botão de pesquisa para séries
         btn_pesquisar_series = ctk.CTkButton(
             filtros_frame,
             text="🔍 Pesquisar",
@@ -1358,7 +1289,6 @@ class App(ctk.CTk):
         treeview.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Adicionar séries do produto selecionado
         if self.produto_selecionado in self.dados_series:
             for serie in self.dados_series[self.produto_selecionado]:
                 treeview.insert("", "end", values=(
@@ -1368,7 +1298,6 @@ class App(ctk.CTk):
                     serie["status"]
                 ))
         else:
-            # Mensagem se não houver séries para o produto
             empty_label = ctk.CTkLabel(
                 lista_frame,
                 text="Nenhuma série encontrada para este produto",
@@ -1830,7 +1759,6 @@ class App(ctk.CTk):
         self.frame_marcdagua.grid_rowconfigure(0, weight=1)
         self.frame_marcdagua.grid_columnconfigure(0, weight=1)
 
-        # Área de conteúdo principal
         self.area_conteudo = ctk.CTkFrame(self.frame_marcdagua, fg_color="white")
         self.area_conteudo.grid(row=0, column=0, sticky="nsew")
         self.area_conteudo.grid_rowconfigure(0, weight=1)
