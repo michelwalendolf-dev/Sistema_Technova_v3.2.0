@@ -912,7 +912,7 @@ class App(ctk.CTk):
         frame_produtos = ctk.CTkFrame(self.area_conteudo, fg_color="white")
         frame_produtos.pack(fill="both", expand=True, padx=0, pady=0)
 
-        frame_abas = ctk.CTkFrame(frame_produtos, height=40, fg_color="#f0f0f0")
+        frame_abas = ctk.CTkFrame(frame_produtos, height=40, fg_color="#f0f0f0", corner_radius=0)
         frame_abas.pack(fill="x", pady=0)
         frame_abas.pack_propagate(False)
         
@@ -943,7 +943,7 @@ class App(ctk.CTk):
         )
         self.aba_series.pack(side="left", padx=5, pady=5)
 
-        frame_cabecario_produtos = ctk.CTkFrame(frame_produtos, height=50, fg_color="#f0f0f0")
+        frame_cabecario_produtos = ctk.CTkFrame(frame_produtos, height=50, fg_color="#f0f0f0",corner_radius=0)
         frame_cabecario_produtos.pack(fill="x", pady=0)
         frame_cabecario_produtos.pack_propagate(False)
 
@@ -954,7 +954,7 @@ class App(ctk.CTk):
             height=30,
             fg_color="#4CAF50",
             hover_color="#54C057",
-            border_color="#45a049",
+            border_color="#429647",
             border_width=2,
             text_color="white",
             command=self.abrir_tela_produto
@@ -998,6 +998,7 @@ class App(ctk.CTk):
             ],
             width=120,
             height=30,
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
             fg_color="#9E9E9E",
             button_color="#9E9E9E",
             button_hover_color="#9E9E9E",
@@ -1093,14 +1094,18 @@ class App(ctk.CTk):
 
         btn_pesquisar = ctk.CTkButton(
             filtros_frame,
-            text="🔍 Pesquisar",
+            text="Pesuisar🔎",
             height=35,
+            width=120,
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=20, weight="bold"),
             fg_color="#4CAF50",
-            hover_color="#45a049",
+            hover_color="#54C057",
+            border_color="#429647",
+            border_width=2,
             text_color="white",
             command=self.pesquisar_produtos
         )
-        btn_pesquisar.pack(fill="x", pady=10)
+        btn_pesquisar.pack(pady=10)
 
         lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
@@ -1553,14 +1558,15 @@ class App(ctk.CTk):
         frame_divisoria = ctk.CTkFrame(
             self, 
             height=16,
-            fg_color="#b7b7b7",
+            fg_color="#b6b4b4",
+            corner_radius=0
         )
         frame_divisoria.grid(row=1, column=0, sticky="ew", padx=0, pady=0)
         frame_divisoria.grid_propagate(False)
 
         frame_degrade = ctk.CTkFrame(
             frame_divisoria, 
-            fg_color="#f2f2f2", 
+            fg_color="#b6b4b4", 
             height=16,
             corner_radius=0,
         )
@@ -1689,13 +1695,14 @@ class App(ctk.CTk):
         frame_divisoria_menu = ctk.CTkFrame(
             menu_container, 
             height=16,
-            fg_color="#b7b7b7",
+            fg_color="#b6b4b4",
+            corner_radius=0
         )
         frame_divisoria_menu.pack(fill="x", pady=0)
 
         frame_degrade = ctk.CTkFrame(
             frame_divisoria_menu, 
-            fg_color="#f9f9f9", 
+            fg_color="#b6b4b4", 
             height=16,
             corner_radius=0,
         )
