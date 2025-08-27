@@ -1105,10 +1105,10 @@ class App(ctk.CTk):
         lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
 
-        stilo = ttk.Style()
-        stilo.theme_use("clam")
-        stilo.configure("Treeview.Heading", font=("Arial", 14, "bold"), background="#ebebeb")
-        stilo.configure("Treeview", font=("Arial", 11))
+        estilo = ttk.Style()
+        estilo.theme_use("clam")
+        estilo.configure("Treeview.Heading", font=("Roboto", 13, "bold"), background="#ebebeb")
+        estilo.configure("Treeview", font=("Roboto", 12))
 
         colunas = ("serie", "codigo", "nome", "marca", "valor", "estoque")
         self.treeview_produtos = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
