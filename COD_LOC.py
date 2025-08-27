@@ -12,7 +12,7 @@ import tkinter.messagebox as messagebox
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
-class JanelaProduto(ctk.CTkToplevel):
+class TelaProduto(ctk.CTkToplevel):
     def __init__(self, parent, produto=None):
         super().__init__(parent)
         self.parent = parent
@@ -59,7 +59,7 @@ class JanelaProduto(ctk.CTkToplevel):
         frame_botoes = ctk.CTkFrame(frame_cabecalho, fg_color="transparent")
         frame_botoes.pack(side="right", padx=10, pady=5)
         
-        btn_cancelar = ctk.CTkButton(
+        botao_cancelar = ctk.CTkButton(
             frame_botoes,
             text="Cancelar",
             width=80,
@@ -69,9 +69,9 @@ class JanelaProduto(ctk.CTkToplevel):
             text_color="white",
             command=self.destroy
         )
-        btn_cancelar.pack(side="right", padx=5)
+        botao_cancelar.pack(side="right", padx=5)
         
-        btn_salvar = ctk.CTkButton(
+        botao_salvar = ctk.CTkButton(
             frame_botoes,
             text="Salvar",
             width=80,
@@ -81,7 +81,7 @@ class JanelaProduto(ctk.CTkToplevel):
             text_color="white",
             command=self.salvar_produto
         )
-        btn_salvar.pack(side="right", padx=5)
+        botao_salvar.pack(side="right", padx=5)
         
         self.frame_conteudo = ctk.CTkFrame(self)
         self.frame_conteudo.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
@@ -119,25 +119,25 @@ class JanelaProduto(ctk.CTkToplevel):
         for widget in self.frame_conteudo.winfo_children():
             widget.destroy()
             
-        main_frame = ctk.CTkFrame(self.frame_conteudo, fg_color="white")
-        main_frame.pack(fill="both", expand=True)
+        frame_principal = ctk.CTkFrame(self.frame_conteudo, fg_color="white")
+        frame_principal.pack(fill="both", expand=True)
         
-        canvas = tk.Canvas(main_frame, bg="white", highlightthickness=0)
-        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = ctk.CTkFrame(canvas, fg_color="white")
+        canvas = tk.Canvas(frame_principal, bg="white", highlightthickness=0)
+        barra_rolagem = ttk.Scrollbar(frame_principal, orient="vertical", command=canvas.yview)
+        frame_barra_rolagem = ctk.CTkFrame(canvas, fg_color="white")
         
-        scrollable_frame.bind(
+        frame_barra_rolagem.bind(
             "<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
         
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.create_window((0, 0), window=frame_barra_rolagem, anchor="nw")
+        canvas.configure(yscrollcommand=barra_rolagem.set)
         
         canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        barra_rolagem.pack(side="right", fill="y")
         
-        frame_principal = ctk.CTkFrame(scrollable_frame, fg_color="white")
+        frame_principal = ctk.CTkFrame(frame_barra_rolagem, fg_color="white")
         frame_principal.pack(fill="both", expand=True, padx=10, pady=10)
         frame_principal.grid_columnconfigure(0, weight=1)
         frame_principal.grid_columnconfigure(1, weight=1)
@@ -146,50 +146,50 @@ class JanelaProduto(ctk.CTkToplevel):
         frame_esquerda = ctk.CTkFrame(frame_principal, fg_color="white")
         frame_esquerda.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=10)
         
-        lbl_cod_seq = ctk.CTkLabel(frame_esquerda, text="Código Sequencial:", anchor="w", text_color="black")
-        lbl_cod_seq.pack(fill="x", pady=(0, 5))
+        label_codigo_sequencial = ctk.CTkLabel(frame_esquerda, text="Código Sequencial:", anchor="w", text_color="black")
+        label_codigo_sequencial.pack(fill="x", pady=(0, 5))
         
-        self.entry_cod_seq = ctk.CTkEntry(
+        self.entry_codigo_sequencial = ctk.CTkEntry(
             frame_esquerda, 
             fg_color="#f0f0f0",
             text_color="black",
             state="disabled"
         )
-        self.entry_cod_seq.insert(0, self.codigo_sequencial)
-        self.entry_cod_seq.pack(fill="x", pady=(0, 10))
+        self.entry_codigo_sequencial.insert(0, self.codigo_sequencial)
+        self.entry_codigo_sequencial.pack(fill="x", pady=(0, 10))
         
-        lbl_marca = ctk.CTkLabel(frame_esquerda, text="Marca:", anchor="w", text_color="black")
-        lbl_marca.pack(fill="x", pady=(0, 5))
+        label_marca = ctk.CTkLabel(frame_esquerda, text="Marca:", anchor="w", text_color="black")
+        label_marca.pack(fill="x", pady=(0, 5))
         
         self.entry_marca = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_marca.pack(fill="x", pady=(0, 10))
         
-        lbl_valor = ctk.CTkLabel(frame_esquerda, text="Preço Médio (R$):", anchor="w", text_color="black")
-        lbl_valor.pack(fill="x", pady=(0, 5))
+        label_valor = ctk.CTkLabel(frame_esquerda, text="Preço Médio (R$):", anchor="w", text_color="black")
+        label_valor.pack(fill="x", pady=(0, 5))
         
         self.entry_valor = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_valor.pack(fill="x", pady=(0, 10))
         
-        lbl_peso = ctk.CTkLabel(frame_esquerda, text="Peso (kg):", anchor="w", text_color="black")
-        lbl_peso.pack(fill="x", pady=(0, 5))
+        label_peso = ctk.CTkLabel(frame_esquerda, text="Peso (kg):", anchor="w", text_color="black")
+        label_peso.pack(fill="x", pady=(0, 5))
         
         self.entry_peso = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_peso.pack(fill="x", pady=(0, 10))
         
-        lbl_altura = ctk.CTkLabel(frame_esquerda, text="Altura (cm):", anchor="w", text_color="black")
-        lbl_altura.pack(fill="x", pady=(0, 5))
+        label_altura = ctk.CTkLabel(frame_esquerda, text="Altura (cm):", anchor="w", text_color="black")
+        label_altura.pack(fill="x", pady=(0, 5))
         
         self.entry_altura = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_altura.pack(fill="x", pady=(0, 10))
         
-        lbl_largura = ctk.CTkLabel(frame_esquerda, text="Largura (cm):", anchor="w", text_color="black")
-        lbl_largura.pack(fill="x", pady=(0, 5))
+        label_largura = ctk.CTkLabel(frame_esquerda, text="Largura (cm):", anchor="w", text_color="black")
+        label_largura.pack(fill="x", pady=(0, 5))
         
         self.entry_largura = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_largura.pack(fill="x", pady=(0, 10))
         
-        lbl_tipo = ctk.CTkLabel(frame_esquerda, text="Tipo de Produto:", anchor="w", text_color="black")
-        lbl_tipo.pack(fill="x", pady=(0, 5))
+        label_tipo = ctk.CTkLabel(frame_esquerda, text="Tipo de Produto:", anchor="w", text_color="black")
+        label_tipo.pack(fill="x", pady=(0, 5))
         
         self.combo_tipo = ctk.CTkComboBox(
             frame_esquerda, 
@@ -204,20 +204,20 @@ class JanelaProduto(ctk.CTkToplevel):
         frame_direita = ctk.CTkFrame(frame_principal, fg_color="white")
         frame_direita.grid(row=0, column=1, sticky="nsew", padx=(10, 0), pady=10)
         
-        lbl_cod_pers = ctk.CTkLabel(frame_direita, text="Código:", anchor="w", text_color="black")
-        lbl_cod_pers.pack(fill="x", pady=(0, 5))
+        label_codigo_editavel = ctk.CTkLabel(frame_direita, text="Código:", anchor="w", text_color="black")
+        label_codigo_editavel.pack(fill="x", pady=(0, 5))
         
-        self.entry_cod_pers = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
-        self.entry_cod_pers.pack(fill="x", pady=(0, 10))
+        self.entry_codigo_editavel = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
+        self.entry_codigo_editavel.pack(fill="x", pady=(0, 10))
         
-        lbl_nome = ctk.CTkLabel(frame_direita, text="Nome:", anchor="w", text_color="black")
-        lbl_nome.pack(fill="x", pady=(0, 5))
+        label_nome = ctk.CTkLabel(frame_direita, text="Nome:", anchor="w", text_color="black")
+        label_nome.pack(fill="x", pady=(0, 5))
         
         self.entry_nome = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
         self.entry_nome.pack(fill="x", pady=(0, 10))
         
-        lbl_grupo = ctk.CTkLabel(frame_direita, text="Grupo de Produto:", anchor="w", text_color="black")
-        lbl_grupo.pack(fill="x", pady=(0, 5))
+        label_grupo = ctk.CTkLabel(frame_direita, text="Grupo de Produto:", anchor="w", text_color="black")
+        label_grupo.pack(fill="x", pady=(0, 5))
         
         self.combo_grupo = ctk.CTkComboBox(
             frame_direita, 
@@ -229,8 +229,8 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.combo_grupo.pack(fill="x", pady=(0, 10))
         
-        lbl_estoque = ctk.CTkLabel(frame_direita, text="Estoque:", anchor="w", text_color="black")
-        lbl_estoque.pack(fill="x", pady=(0, 5))
+        label_estoque = ctk.CTkLabel(frame_direita, text="Estoque:", anchor="w", text_color="black")
+        label_estoque.pack(fill="x", pady=(0, 5))
         
         self.combo_estoque = ctk.CTkComboBox(
             frame_direita, 
@@ -242,60 +242,60 @@ class JanelaProduto(ctk.CTkToplevel):
         )
         self.combo_estoque.pack(fill="x", pady=(0, 10))
         
-        lbl_fornecedor = ctk.CTkLabel(frame_direita, text="Fornecedor:", anchor="w", text_color="black")
-        lbl_fornecedor.pack(fill="x", pady=(0, 5))
+        label_fornecedor = ctk.CTkLabel(frame_direita, text="Fornecedor:", anchor="w", text_color="black")
+        label_fornecedor.pack(fill="x", pady=(0, 5))
         
         self.entry_fornecedor = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
         self.entry_fornecedor.pack(fill="x", pady=(0, 10))
         
-        lbl_qtd_estoque = ctk.CTkLabel(frame_direita, text="Quantidade em Estoque:", anchor="w", text_color="black")
-        lbl_qtd_estoque.pack(fill="x", pady=(0, 5))
+        label_quantidade_estoque = ctk.CTkLabel(frame_direita, text="Quantidade em Estoque:", anchor="w", text_color="black")
+        label_quantidade_estoque.pack(fill="x", pady=(0, 5))
         
-        self.entry_qtd_estoque = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
-        self.entry_qtd_estoque.pack(fill="x", pady=(0, 20))
+        self.entry_quantidade_estoque = ctk.CTkEntry(frame_direita, fg_color="white", text_color="black")
+        self.entry_quantidade_estoque.pack(fill="x", pady=(0, 20))
         
         checkbox_frame = ctk.CTkFrame(frame_direita, fg_color="white")
         checkbox_frame.pack(fill="x", pady=(0, 10))
         
-        checkbox_left = ctk.CTkFrame(checkbox_frame, fg_color="white")
-        checkbox_left.pack(side="left", fill="both", expand=True)
+        checkbox_esquerdo = ctk.CTkFrame(checkbox_frame, fg_color="white")
+        checkbox_esquerdo.pack(side="left", fill="both", expand=True)
         
-        checkbox_right = ctk.CTkFrame(checkbox_frame, fg_color="white")
-        checkbox_right.pack(side="right", fill="both", expand=True)
+        checkbox_direito = ctk.CTkFrame(checkbox_frame, fg_color="white")
+        checkbox_direito.pack(side="right", fill="both", expand=True)
         
-        self.var_controla_serie = ctk.BooleanVar()
-        self.check_controla_serie = ctk.CTkCheckBox(
-            checkbox_left, 
+        self.variavel_controle_serie = ctk.BooleanVar()
+        self.check_controle_serie = ctk.CTkCheckBox(
+            checkbox_esquerdo, 
             text="Controlado por Série",
-            variable=self.var_controla_serie,
+            variable=self.variavel_controle_serie,
             text_color="black",
-            command=self.verificar_series_ao_desmarcar
+            command=self.verificar_series_desmarcadas
         )
-        self.check_controla_serie.pack(fill="x", pady=(0, 5))
+        self.check_controle_serie.pack(fill="x", pady=(0, 5))
         
-        self.var_validade = ctk.BooleanVar()
+        self.variavel_validade = ctk.BooleanVar()
         self.check_validade = ctk.CTkCheckBox(
-            checkbox_left, 
+            checkbox_esquerdo, 
             text="Por Validade",
-            variable=self.var_validade,
+            variable=self.variavel_validade,
             text_color="black"
         )
         self.check_validade.pack(fill="x", pady=(0, 5))
         
-        self.var_inativo = ctk.BooleanVar()
+        self.variavel_inativo = ctk.BooleanVar()
         self.check_inativo = ctk.CTkCheckBox(
-            checkbox_right, 
+            checkbox_direito, 
             text="Inativo",
-            variable=self.var_inativo,
+            variable=self.variavel_inativo,
             text_color="black"
         )
         self.check_inativo.pack(fill="x", pady=(0, 5))
         
-        self.var_brinde = ctk.BooleanVar()
+        self.variavel_brinde = ctk.BooleanVar()
         self.check_brinde = ctk.CTkCheckBox(
-            checkbox_right, 
+            checkbox_direito, 
             text="Brinde",
-            variable=self.var_brinde,
+            variable=self.variavel_brinde,
             text_color="black"
         )
         self.check_brinde.pack(fill="x", pady=(0, 5))
@@ -305,17 +305,17 @@ class JanelaProduto(ctk.CTkToplevel):
         
         canvas.bind_all("<MouseWheel>", on_mousewheel)
     
-    def verificar_series_ao_desmarcar(self):
-        if not self.var_controla_serie.get() and self.produto:
+    def verificar_series_desmarcadas(self):
+        if not self.variavel_controle_serie.get() and self.produto:
             codigo_produto = self.produto["codigo"]
             if codigo_produto in self.parent.dados_series and self.parent.dados_series[codigo_produto]:
                 resposta = messagebox.askyesno(
                     "Atenção", 
-                    "Este produto possui números de série cadastrados. Deseja continuar?",
+                    "Este produto possui números de série cadastrados.\nDeseja continuar?\033",
                     parent=self
                 )
                 if not resposta:
-                    self.var_controla_serie.set(True)
+                    self.variavel_controle_serie.set(True)
     
     def mostrar_aba_anexo(self):
         self.aba_cadastro.configure(fg_color="#9E9E9E", font=ctk.CTkFont(size=14))
@@ -327,15 +327,15 @@ class JanelaProduto(ctk.CTkToplevel):
         frame_principal = ctk.CTkFrame(self.frame_conteudo, fg_color="white")
         frame_principal.pack(fill="both", expand=True, padx=10, pady=10)
         
-        lbl_upload = ctk.CTkLabel(
+        label_upload_produto_imagem = ctk.CTkLabel(
             frame_principal,
             text="Arraste e solte uma imagem aqui ou clique para selecionar",
             text_color="black",
             font=ctk.CTkFont(size=14)
         )
-        lbl_upload.place(relx=0.5, rely=0.4, anchor="center")
+        label_upload_produto_imagem.place(relx=0.5, rely=0.4, anchor="center")
         
-        btn_selecionar = ctk.CTkButton(
+        botao_selecionar = ctk.CTkButton(
             frame_principal,
             text="Selecionar Imagem",
             width=150,
@@ -344,7 +344,7 @@ class JanelaProduto(ctk.CTkToplevel):
             hover_color="#45a049",
             text_color="white"
         )
-        btn_selecionar.place(relx=0.5, rely=0.5, anchor="center")
+        botao_selecionar.place(relx=0.5, rely=0.5, anchor="center")
         
         if self.produto and "imagem" in self.produto:
             pass
@@ -353,10 +353,10 @@ class JanelaProduto(ctk.CTkToplevel):
         if not self.produto:
             return
             
-        self.entry_cod_seq.configure(state="normal")
-        self.entry_cod_seq.delete(0, "end")
-        self.entry_cod_seq.insert(0, self.produto.get("codigo_sequencial", ""))
-        self.entry_cod_seq.configure(state="disabled")
+        self.entry_codigo_sequencial.configure(state="normal")
+        self.entry_codigo_sequencial.delete(0, "end")
+        self.entry_codigo_sequencial.insert(0, self.produto.get("codigo_sequencial", ""))
+        self.entry_codigo_sequencial.configure(state="disabled")
         
         self.entry_marca.insert(0, self.produto.get("marca", ""))
         self.entry_valor.insert(0, self.produto.get("valor", "").replace("R$ ", ""))
@@ -370,17 +370,17 @@ class JanelaProduto(ctk.CTkToplevel):
         self.combo_grupo.set(self.produto.get("grupo", ""))
         self.combo_estoque.set(self.produto.get("local_estoque", ""))
         self.entry_fornecedor.insert(0, self.produto.get("fornecedor", ""))
-        self.entry_qtd_estoque.insert(0, self.produto.get("estoque", "").replace(" unidades", ""))
+        self.entry_quantidade_estoque.insert(0, self.produto.get("estoque", "").replace(" unidades", ""))
         
-        self.var_controla_serie.set(self.produto.get("controla_serie", False))
-        self.var_inativo.set(self.produto.get("inativo", False))
-        self.var_validade.set(self.produto.get("por_validade", False))
-        self.var_brinde.set(self.produto.get("brinde", False))
+        self.variavel_controle_serie.set(self.produto.get("controla_serie", False))
+        self.variavel_inativo.set(self.produto.get("inativo", False))
+        self.variavel_validade.set(self.produto.get("por_validade", False))
+        self.variavel_brinde.set(self.produto.get("brinde", False))
     
-    def salvar_produto(self):
+    def salvar_edicao_produto(self):
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
-            not self.var_controla_serie.get() and
+            not self.variavel_controle_serie.get() and
             self.produto["codigo"] in self.parent.dados_series and
             self.parent.dados_series[self.produto["codigo"]]):
             
@@ -393,7 +393,7 @@ class JanelaProduto(ctk.CTkToplevel):
                 return
         
         dados = {
-            "codigo_sequencial": self.entry_cod_seq.get(),
+            "codigo_sequencial": self.entry_codigo_sequencial.get(),
             "marca": self.entry_marca.get(),
             "valor": f"R$ {self.entry_valor.get()}",
             "peso": self.entry_peso.get(),
@@ -405,12 +405,12 @@ class JanelaProduto(ctk.CTkToplevel):
             "grupo": self.combo_grupo.get(),
             "local_estoque": self.combo_estoque.get(),
             "fornecedor": self.entry_fornecedor.get(),
-            "estoque": f"{self.entry_qtd_estoque.get()} unidades",
-            "controla_serie": self.var_controla_serie.get(),
-            "inativo": self.var_inativo.get(),
-            "por_validade": self.var_validade.get(),
-            "brinde": self.var_brinde.get(),
-            "serie": "✔️" if self.var_controla_serie.get() else "❌"
+            "estoque": f"{self.entry_quantidade_estoque.get()} unidades",
+            "controla_serie": self.variavel_controle_serie.get(),
+            "inativo": self.variavel_inativo.get(),
+            "por_validade": self.variavel_validade.get(),
+            "brinde": self.variavel_brinde.get(),
+            "serie": "✔️" if self.variavel_controle_serie.get() else "❌"
         }
         
         if self.produto:
@@ -429,10 +429,10 @@ class JanelaProduto(ctk.CTkToplevel):
         if not self.produto:
             return
             
-        self.entry_cod_seq.configure(state="normal")
-        self.entry_cod_seq.delete(0, "end")
-        self.entry_cod_seq.insert(0, self.produto.get("codigo_sequencial", ""))
-        self.entry_cod_seq.configure(state="disabled")
+        self.entry_codigo_sequencial.configure(state="normal")
+        self.entry_codigo_sequencial.delete(0, "end")
+        self.entry_codigo_sequencial.insert(0, self.produto.get("codigo_sequencial", ""))
+        self.entry_codigo_sequencial.configure(state="disabled")
         
         self.entry_marca.insert(0, self.produto.get("marca", ""))
         self.entry_valor.insert(0, self.produto.get("valor", "").replace("R$ ", ""))
@@ -446,17 +446,17 @@ class JanelaProduto(ctk.CTkToplevel):
         self.combo_grupo.set(self.produto.get("grupo", ""))
         self.combo_estoque.set(self.produto.get("local_estoque", ""))
         self.entry_fornecedor.insert(0, self.produto.get("fornecedor", ""))
-        self.entry_qtd_estoque.insert(0, self.produto.get("estoque", "").replace(" unidades", ""))
+        self.entry_quantidade_estoque.insert(0, self.produto.get("estoque", "").replace(" unidades", ""))
         
-        self.var_controla_serie.set(self.produto.get("controla_serie", False))
-        self.var_inativo.set(self.produto.get("inativo", False))
-        self.var_validade.set(self.produto.get("por_validade", False))
-        self.var_brinde.set(self.produto.get("brinde", False))
+        self.variavel_controle_serie.set(self.produto.get("controla_serie", False))
+        self.variavel_inativo.set(self.produto.get("inativo", False))
+        self.variavel_validade.set(self.produto.get("por_validade", False))
+        self.variavel_brinde.set(self.produto.get("brinde", False))
     
     def salvar_produto(self):
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
-            not self.var_controla_serie.get() and
+            not self.variavel_controle_serie.get() and
             self.produto["codigo"] in self.parent.dados_series and
             self.parent.dados_series[self.produto["codigo"]]):
             
@@ -469,7 +469,7 @@ class JanelaProduto(ctk.CTkToplevel):
                 return  
         
         dados = {
-            "codigo_sequencial": self.entry_cod_seq.get(),
+            "codigo_sequencial": self.entry_codigo_sequencial.get(),
             "marca": self.entry_marca.get(),
             "valor": f"R$ {self.entry_valor.get()}",
             "peso": self.entry_peso.get(),
@@ -481,12 +481,12 @@ class JanelaProduto(ctk.CTkToplevel):
             "grupo": self.combo_grupo.get(),
             "local_estoque": self.combo_estoque.get(),
             "fornecedor": self.entry_fornecedor.get(),
-            "estoque": f"{self.entry_qtd_estoque.get()} unidades",
-            "controla_serie": self.var_controla_serie.get(),
-            "inativo": self.var_inativo.get(),
-            "por_validade": self.var_validade.get(),
-            "brinde": self.var_brinde.get(),
-            "serie": "✔️" if self.var_controla_serie.get() else "❌"
+            "estoque": f"{self.entry_quantidade_estoque.get()} unidades",
+            "controla_serie": self.variavel_controle_serie.get(),
+            "inativo": self.variavel_inativo.get(),
+            "por_validade": self.variavel_validade.get(),
+            "brinde": self.variavel_brinde.get(),
+            "serie": "✔️" if self.variavel_controle_serie.get() else "❌"
         }
         
         if self.produto:
@@ -587,8 +587,8 @@ class App(ctk.CTk):
     def maximizar_window(self):
         self.state('zoomed')
     
-    def abrir_janela_produto(self, produto=None):
-        janela = JanelaProduto(self, produto)
+    def abrir_tela_produto(self, produto=None):
+        janela = TelaProduto(self, produto)
         janela.grab_set()  
         janela.focus_set()  
     
@@ -600,7 +600,7 @@ class App(ctk.CTk):
             
             for produto in self.dados_produtos:
                 if produto["codigo"] == valores[1]:  # valores[1] é o código
-                    self.abrir_janela_produto(produto)
+                    self.abrir_tela_produto(produto)
                     break
     
     def excluir_produto(self):
@@ -776,29 +776,29 @@ class App(ctk.CTk):
         for widget in self.area_conteudo.winfo_children():
             widget.destroy()
 
-        title_label = ctk.CTkLabel(
+        titulo_label = ctk.CTkLabel(
             self.area_conteudo,
             text="Buscar Unidade",
             font=ctk.CTkFont(size=16, weight="bold"),
             text_color="black"
         )
-        title_label.pack(pady=(10, 20), anchor="w")
+        titulo_label.pack(pady=(10, 20), anchor="w")
 
-        search_frame = ctk.CTkFrame(self.area_conteudo, fg_color="#ffffff")
-        search_frame.pack(fill="x", pady=10)
+        frame_pesquisar = ctk.CTkFrame(self.area_conteudo, fg_color="#ffffff")
+        frame_pesquisar.pack(fill="x", pady=10)
 
-        search_entry = ctk.CTkEntry(
-            search_frame,
+        entry_pesquisar = ctk.CTkEntry(
+            frame_pesquisar,
             placeholder_text="Pesquisar unidade...",
             fg_color="#ffffff",
             border_color="#c0c0c0",
             text_color="black",
             height=35
         )
-        search_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        entry_pesquisar.pack(side="left", fill="x", expand=True, padx=(0, 5))
         
-        search_btn = ctk.CTkButton(
-            search_frame, 
+        botao_pesquisar = ctk.CTkButton(
+            frame_pesquisar, 
             text="Buscar", 
             width=80,
             height=35,
@@ -806,7 +806,7 @@ class App(ctk.CTk):
             hover_color="#c0c0c0",
             text_color="black"
         )
-        search_btn.pack(side="left")
+        botao_pesquisar.pack(side="left")
 
         info_label = ctk.CTkLabel(
             self.area_conteudo,
@@ -820,19 +820,19 @@ class App(ctk.CTk):
         for widget in self.area_conteudo.winfo_children():
             widget.destroy()
 
-        title_label = ctk.CTkLabel(
+        titulo_label = ctk.CTkLabel(
             self.area_conteudo,
             text="Gerenciar Unidades",
             font=ctk.CTkFont(size=16, weight="bold"),
             text_color="black"
         )
-        title_label.pack(pady=(10, 20), anchor="w")
+        titulo_label.pack(pady=(10, 20), anchor="w")
 
-        action_frame = ctk.CTkFrame(self.area_conteudo, fg_color="#ffffff")
-        action_frame.pack(fill="x", pady=10)
+        frame_acao = ctk.CTkFrame(self.area_conteudo, fg_color="#ffffff")
+        frame_acao.pack(fill="x", pady=10)
 
         add_btn = ctk.CTkButton(
-            action_frame,
+            frame_acao,
             text="Adicionar Unidade",
             height=35,
             fg_color="#d0d0d0",
@@ -843,7 +843,7 @@ class App(ctk.CTk):
         add_btn.pack(side="left", padx=5)
 
         edit_btn = ctk.CTkButton(
-            action_frame,
+            frame_acao,
             text="Editar Unidade",
             height=35,
             fg_color="#d0d0d0",
@@ -957,7 +957,7 @@ class App(ctk.CTk):
             border_color="#45a049",
             border_width=2,
             text_color="white",
-            command=self.abrir_janela_produto
+            command=self.abrir_tela_produto
         )
         btn_novo.pack(side="left", padx=(10, 5), pady=10)
 
@@ -1127,11 +1127,11 @@ class App(ctk.CTk):
         self.treeview_produtos.column("valor", width=100, anchor="e")
         self.treeview_produtos.column("estoque", width=80, anchor="center")
 
-        scrollbar = ttk.Scrollbar(lista_frame, orient="vertical", command=self.treeview_produtos.yview)
-        self.treeview_produtos.configure(yscrollcommand=scrollbar.set)
+        barra_rolagem = ttk.Scrollbar(lista_frame, orient="vertical", command=self.treeview_produtos.yview)
+        self.treeview_produtos.configure(yscrollcommand=barra_rolagem.set)
         
         self.treeview_produtos.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        barra_rolagem.pack(side="right", fill="y")
 
         for produto in self.dados_produtos:
             self.treeview_produtos.insert("", "end", values=(
@@ -1283,11 +1283,11 @@ class App(ctk.CTk):
         treeview.column("estoque", width=100, anchor="center")
         treeview.column("status", width=100, anchor="center")
 
-        scrollbar = ttk.Scrollbar(lista_frame, orient="vertical", command=treeview.yview)
-        treeview.configure(yscrollcommand=scrollbar.set)
+        barra_rolagem = ttk.Scrollbar(lista_frame, orient="vertical", command=treeview.yview)
+        treeview.configure(yscrollcommand=barra_rolagem.set)
         
         treeview.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        barra_rolagem.pack(side="right", fill="y")
         
         if self.produto_selecionado in self.dados_series:
             for serie in self.dados_series[self.produto_selecionado]:
