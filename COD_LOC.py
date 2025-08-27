@@ -365,7 +365,7 @@ class TelaProduto(ctk.CTkToplevel):
         self.entry_largura.insert(0, self.produto.get("largura", ""))
         self.combo_tipo.set(self.produto.get("tipo", ""))
         
-        self.entry_cod_pers.insert(0, self.produto.get("codigo", "").replace("COD", ""))
+        self.entry_codigo_editavel.insert(0, self.produto.get("codigo", "").replace("COD", ""))
         self.entry_nome.insert(0, self.produto.get("nome", ""))
         self.combo_grupo.set(self.produto.get("grupo", ""))
         self.combo_estoque.set(self.produto.get("local_estoque", ""))
@@ -400,7 +400,7 @@ class TelaProduto(ctk.CTkToplevel):
             "altura": self.entry_altura.get(),
             "largura": self.entry_largura.get(),
             "tipo": self.combo_tipo.get(),
-            "codigo": f"COD{self.entry_cod_pers.get()}" if self.entry_cod_pers.get() else f"COD{self.codigo_sequencial}",
+            "codigo": f"COD{self.entry_codigo_editavel.get()}" if self.entry_codigo_editavel.get() else f"COD{self.codigo_sequencial}",
             "nome": self.entry_nome.get(),
             "grupo": self.combo_grupo.get(),
             "local_estoque": self.combo_estoque.get(),
@@ -441,7 +441,7 @@ class TelaProduto(ctk.CTkToplevel):
         self.entry_largura.insert(0, self.produto.get("largura", ""))
         self.combo_tipo.set(self.produto.get("tipo", ""))
         
-        self.entry_cod_pers.insert(0, self.produto.get("codigo", "").replace("COD", ""))
+        self.entry_codigo_editavel.insert(0, self.produto.get("codigo", "").replace("COD", ""))
         self.entry_nome.insert(0, self.produto.get("nome", ""))
         self.combo_grupo.set(self.produto.get("grupo", ""))
         self.combo_estoque.set(self.produto.get("local_estoque", ""))
@@ -476,7 +476,7 @@ class TelaProduto(ctk.CTkToplevel):
             "altura": self.entry_altura.get(),
             "largura": self.entry_largura.get(),
             "tipo": self.combo_tipo.get(),
-            "codigo": f"COD{self.entry_cod_pers.get()}" if self.entry_cod_pers.get() else f"COD{self.codigo_sequencial}",
+            "codigo": f"COD{self.entry_codigo_editavel.get()}" if self.entry_codigo_editavel.get() else f"COD{self.codigo_sequencial}",
             "nome": self.entry_nome.get(),
             "grupo": self.combo_grupo.get(),
             "local_estoque": self.combo_estoque.get(),
@@ -1108,7 +1108,7 @@ class App(ctk.CTk):
         estilo = ttk.Style()
         estilo.theme_use("clam")
         estilo.configure("Treeview.Heading", font=("Roboto", 13, "bold"), background="#ebebeb")
-        estilo.configure("Treeview", font=("Roboto", 12))
+        estilo.configure("Treeview", font=("Segoe UI Emoji", 12))
 
         colunas = ("serie", "codigo", "nome", "marca", "valor", "estoque")
         self.treeview_produtos = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
@@ -1448,7 +1448,7 @@ class App(ctk.CTk):
             fg_color="#4f8cff", 
             hover_color="#357ae8", 
             text_color="#fff",
-            font=("Roboto", 15, "bold"), 
+            font=("Segoe UI Emoji", 15, "bold"), 
             corner_radius=8, 
             border_color="#357ae8",
             border_width=2,
@@ -1464,7 +1464,7 @@ class App(ctk.CTk):
             fg_color="#ebb000", 
             hover_color="#f1ba13", 
             text_color="#fff",
-            font=("Roboto", 15, "bold"), 
+            font=("Segoe UI Emoji", 15, "bold"), 
             corner_radius=8, 
             border_color="#d19d01",
             border_width=2,
@@ -1481,7 +1481,7 @@ class App(ctk.CTk):
             fg_color="#e74c3c", 
             hover_color="#c0392b", 
             text_color="#fff",
-            font=("Roboto", 15, "bold"), 
+            font=("Segoe UI Emoji", 15, "bold"), 
             corner_radius=8, 
             border_width=2,
             border_color="#c0392b"
@@ -1660,8 +1660,8 @@ class App(ctk.CTk):
 
         self.menu_widgets = {}
         for text, options in menu_items:
-            menu_font = ctk.CTkFont(family="Roboto", size=16, weight="bold")
-            dropdown_font = ctk.CTkFont(family="Roboto", size=14)
+            menu_font = ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold")
+            dropdown_font = ctk.CTkFont(family="Segoe UI Emoji", size=14)
 
             menu = ctk.CTkOptionMenu(
                 menu_container,
