@@ -21,6 +21,30 @@ class TelaProduto(ctk.CTkToplevel):
         self.geometry("550x600")
         self.resizable(True, True)
         
+        # Adicionar ícone
+        try:
+            icon_path = os.path.join("Icones", "produtos.ico")
+            self.iconbitmap(icon_path)
+        except Exception as e:
+            print(f"Erro ao carregar ícone: {e}")
+        
+        # Carregar imagens para série - manter como atributos da instância
+        self.tk_img_sim = None
+        self.tk_img_nao = None
+        try:
+            img_sim = Image.open(os.path.join("Icones", "sim.ico"))
+            img_nao = Image.open(os.path.join("Icones", "nao.ico"))
+
+            # Redimensionar se necessário
+            img_sim = img_sim.resize((20, 20), Image.LANCZOS)
+            img_nao = img_nao.resize((20, 20), Image.LANCZOS)
+            
+            # Converter para formato Tkinter e manter como atributos
+            self.tk_img_sim = ImageTk.PhotoImage(img_sim)
+            self.tk_img_nao = ImageTk.PhotoImage(img_nao)
+        except Exception as e:
+            print(f"Erro ao carregar imagens de série: {e}")
+        
         self.codigo_sequencial = self.gerar_codigo_sequencial()
         
         self.grid_columnconfigure(0, weight=1)
@@ -410,7 +434,7 @@ class TelaProduto(ctk.CTkToplevel):
             "inativo": self.variavel_inativo.get(),
             "por_validade": self.variavel_validade.get(),
             "brinde": self.variavel_brinde.get(),
-            "serie": "✔️" if self.variavel_controle_serie.get() else "❌"
+            "serie": "Sim" if self.variavel_controle_serie.get() else "Não"
         }
         
         if self.produto:
@@ -486,7 +510,7 @@ class TelaProduto(ctk.CTkToplevel):
             "inativo": self.variavel_inativo.get(),
             "por_validade": self.variavel_validade.get(),
             "brinde": self.variavel_brinde.get(),
-            "serie": "✔️" if self.variavel_controle_serie.get() else "❌"
+            "serie": "Sim" if self.variavel_controle_serie.get() else "Não"
         }
         
         if self.produto:
@@ -532,6 +556,23 @@ class App(ctk.CTk):
             print(f"Erro ao carregar marca d'água: {e}")
             self.marcadagua_ctk_image = None
 
+        # Carregar imagens para série (sim e não) - manter como atributos
+        self.tk_img_sim = None
+        self.tk_img_nao = None
+        try:
+            self.img_sim = Image.open(os.path.join("Icones", "sim.ico"))
+            self.img_nao = Image.open(os.path.join("Icones", "nao.ico"))
+
+            # Redimensionar se necessário
+            self.img_sim = self.img_sim.resize((20, 20), Image.LANCZOS)
+            self.img_nao = self.img_nao.resize((20, 20), Image.LANCZOS)
+            
+            # Converter para formato Tkinter e manter como atributos
+            self.tk_img_sim = ImageTk.PhotoImage(self.img_sim)
+            self.tk_img_nao = ImageTk.PhotoImage(self.img_nao)
+        except Exception as e:
+            print(f"Erro ao carregar imagens de série: {e}")
+
         self.carregar_dados_json()
 
         self.produto_selecionado = None
@@ -545,7 +586,7 @@ class App(ctk.CTk):
         except FileNotFoundError:
             self.dados_produtos = []
             for i in range(1, 21):
-                controla_serie = "✔️" if i % 2 == 0 else "❌"
+                controla_serie = "Sim" if i % 2 == 0 else "Não"
                 codigo = f"COD{i:03d}"
                 self.dados_produtos.append({
                     "serie": controla_serie,
@@ -633,14 +674,20 @@ class App(ctk.CTk):
             self.treeview_produtos.delete(item)
         
         for produto in self.dados_produtos:
+            # Determinar a imagem com base no valor de "serie"
+            if produto["serie"] == "Sim":
+                imagem = self.tk_img_sim
+            else:
+                imagem = self.tk_img_nao
+                
             self.treeview_produtos.insert("", "end", values=(
-                produto["serie"],
+                "",  # Deixamos vazio porque vamos usar a imagem
                 produto["codigo"],
                 produto["nome"],
                 produto["marca"],
                 produto["valor"],
                 produto["estoque"]
-            ))
+            ), image=imagem)
     
     def pesquisar_produtos(self):
         filtro_entries = [entry.get().lower() for entry in self.filtro_entries]
@@ -675,14 +722,20 @@ class App(ctk.CTk):
                         break
             
             if corresponde:
+                # Determinar a imagem com base no valor de "serie"
+                if produto["serie"] == "Sim":
+                    imagem = self.tk_img_sim
+                else:
+                    imagem = self.tk_img_nao
+                    
                 self.treeview_produtos.insert("", "end", values=(
-                    produto["serie"],
+                    "",  # Deixamos vazio porque vamos usar a imagem
                     produto["codigo"],
                     produto["nome"],
                     produto["marca"],
                     produto["valor"],
                     produto["estoque"]
-                ))
+                ), image=imagem)
     
     def pesquisar_series(self):
         filtro_entries = [entry.get().lower() for entry in self.filtro_series_entries]
@@ -1139,14 +1192,20 @@ class App(ctk.CTk):
         barra_rolagem.pack(side="right", fill="y")
 
         for produto in self.dados_produtos:
+            # Determinar a imagem com base no valor de "serie"
+            if produto["serie"] == "Sim":
+                imagem = self.tk_img_sim
+            else:
+                imagem = self.tk_img_nao
+                
             self.treeview_produtos.insert("", "end", values=(
-                produto["serie"],
+                "",  # Deixamos vazio porque vamos usar a imagem
                 produto["codigo"],
                 produto["nome"],
                 produto["marca"],
                 produto["valor"],
                 produto["estoque"]
-            ))
+            ), image=imagem)
         self.treeview_produtos.bind("<<TreeviewSelect>>", self.on_produto_selecionado)
 
     def on_produto_selecionado(self, event):
@@ -1154,18 +1213,20 @@ class App(ctk.CTk):
         if selected:
             item = self.treeview_produtos.item(selected[0])
             valores = item['values']
+            codigo = valores[1]  # O código está na segunda coluna (índice 1)
             
-            if valores and valores[0] == "✔️":
-                self.aba_series.configure(state="normal", fg_color="#4CAF50", hover_color="#45a049")
-                self.produto_selecionado = valores[1]  
-                for produto in self.dados_produtos:
-                    if produto["codigo"] == self.produto_selecionado:
+            # Encontrar o produto pelo código
+            for produto in self.dados_produtos:
+                if produto["codigo"] == codigo:
+                    if produto["serie"] == "Sim":
+                        self.aba_series.configure(state="normal", fg_color="#4CAF50", hover_color="#45a049")
+                        self.produto_selecionado = codigo
                         self.produto_selecionado_info = produto
-                        break
-            else:
-                self.aba_series.configure(state="disabled", fg_color="#9E9E9E", hover_color="#757575")
-                self.produto_selecionado = None
-                self.produto_selecionado_info = None
+                    else:
+                        self.aba_series.configure(state="disabled", fg_color="#9E9E9E", hover_color="#757575")
+                        self.produto_selecionado = None
+                        self.produto_selecionado_info = None
+                    break
 
     def mostrar_aba_series(self):
         if not hasattr(self, 'produto_selecionado') or not self.produto_selecionado:
@@ -1200,7 +1261,7 @@ class App(ctk.CTk):
                 produto_info = produto
                 break
 
-        if produto_info and produto_info["serie"] == "❌":
+        if produto_info and produto_info["serie"] == "Não":
             mensagem_frame = ctk.CTkFrame(frame_principal, fg_color="white")
             mensagem_frame.pack(fill="both", expand=True)
             
@@ -1358,15 +1419,13 @@ class App(ctk.CTk):
         header_frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
         header_frame.grid_propagate(False)  
 
-        """CONFIGURAÇÕES - GRID DO CABEçALHO"""
-
         header_frame.grid_rowconfigure(0, weight=1)
-        header_frame.grid_columnconfigure(0, weight=0)  # Logo
-        header_frame.grid_columnconfigure(1, weight=0)  # Usuário
-        header_frame.grid_columnconfigure(2, weight=1)  # Espaço vazio
-        header_frame.grid_columnconfigure(3, weight=0)  # Relógio
-        header_frame.grid_columnconfigure(4, weight=1)  # Espaço vazio
-        header_frame.grid_columnconfigure(5, weight=0)  # Botões
+        header_frame.grid_columnconfigure(0, weight=0)  
+        header_frame.grid_columnconfigure(1, weight=0)  
+        header_frame.grid_columnconfigure(2, weight=1)  
+        header_frame.grid_columnconfigure(3, weight=0)  
+        header_frame.grid_columnconfigure(4, weight=1)  
+        header_frame.grid_columnconfigure(5, weight=0)  
 
         logo_frame = ctk.CTkFrame(header_frame, width=100, height=100, fg_color="#f2f2f2")  
         logo_frame.grid(row=0, column=0, padx=(15, 5), sticky="w", pady=5)  
@@ -1391,7 +1450,7 @@ class App(ctk.CTk):
             text="Usuário:",
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color="black"
-        )
+            )
         user_label.pack(side="left", padx=(0, 5))
 
         username_label = ctk.CTkLabel(
@@ -1553,8 +1612,6 @@ class App(ctk.CTk):
         )
         btn_search.pack(side="left")
     
-        """INICIO DA LINHA DIVISÓRIA PRINCIPAL"""
-
         frame_divisoria = ctk.CTkFrame(
             self, 
             height=16,
@@ -1595,8 +1652,6 @@ class App(ctk.CTk):
             corner_radius=0
         ).pack(fill="x", side="top", pady=0.003)
 
-        """FIM DA LINHA DIVISÓRIA PRINCIPAL"""
-
         body_frame = ctk.CTkFrame(self, fg_color="#b7b7b7")
         body_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
@@ -1615,8 +1670,6 @@ class App(ctk.CTk):
 
         menu_container = ctk.CTkFrame(sidebar_frame, fg_color="#f9f9f9", border_color="#c0c0c0", border_width=3, corner_radius=0)
         menu_container.pack(fill="both", expand=True, padx=0, pady=0)
-
-        """ITENS DO MENU LATERAL"""
 
         menu_items = [
             ("📦 Estoque", [
@@ -1662,8 +1715,6 @@ class App(ctk.CTk):
             ]),
         ]
         
-        """MENU LATERAL"""
-
         self.menu_widgets = {}
         for text, options in menu_items:
             menu_font = ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold")
@@ -1689,8 +1740,6 @@ class App(ctk.CTk):
             menu.set(text)
             menu.pack(fill="x", pady=5, padx=10)
             self.menu_widgets[text] = menu
-        
-        """INICIO DA LINHA DIVISÓRIA DO MENU"""
         
         frame_divisoria_menu = ctk.CTkFrame(
             menu_container, 
@@ -1730,8 +1779,6 @@ class App(ctk.CTk):
             fg_color="#A2A2A2",
             corner_radius=0
         ).pack(fill="x", side="top", pady=0.003)
-
-        """FIM DA LINHA DIVISÓRIA DO MENU"""
 
         frame_imagem = ctk.CTkFrame(
             menu_container, 
