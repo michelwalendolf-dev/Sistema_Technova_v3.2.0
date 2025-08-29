@@ -51,7 +51,7 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         self.title_label = ctk.CTkLabel(
             self.main_frame, 
             text="Verificação de Segurança",
-            font=ctk.CTkFont(size=20, weight="bold"),
+            font=ctk.CTkFont(size=30, weight="bold"),
             text_color="#2d3748"
         )
         self.title_label.pack(pady=(20, 10))
@@ -74,20 +74,21 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         )
         self.instruction_label.pack(pady=(0, 10))
         
-        # Frame do CAPTCHA
+        # Frame do CAPTCHA com borda azul
         self.captcha_frame = ctk.CTkFrame(
             self.main_frame, 
-            height=120,
+            height=140,  # Aumentado para acomodar a imagem maior
             fg_color="#f7fafc",
             corner_radius=8,
             border_width=2,
-            border_color="#357ae8"
+            border_color="#357ae8"  # Borda azul
         )
         self.captcha_frame.pack(fill="x", padx=25, pady=(0, 15))
         self.captcha_frame.pack_propagate(False)
         
-        self.captcha_label = ctk.CTkLabel(self.captcha_frame, text="")
-        self.captcha_label.pack(expand=True)
+        # Label para a imagem CAPTCHA
+        self.captcha_label = ctk.CTkLabel(self.captcha_frame, text="", fg_color="#f7fafc")
+        self.captcha_label.pack(expand=True, fill="both", padx=5, pady=5)
         
         # Campo de entrada
         self.entry = ctk.CTkEntry(
@@ -101,6 +102,7 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         )
         self.entry.pack(fill="x", padx=25, pady=(0, 15))
         self.entry.bind("<Return>", lambda e: self.verify_captcha())
+        self.entry.bind("<Button-1>", lambda e: self.clear_error_message())  # Limpar mensagem ao clicar
         
         # Frame de botões (agora centralizado)
         self.button_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -205,66 +207,87 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         return "ERROR", "Erro ao gerar desafio"
 
     def generate_captcha_image(self):
-        """Gera uma imagem CAPTCHA com tamanho dinâmico e espaçamento reduzido"""
-        # Calcular largura baseada no número de caracteres (reduzida)
-        base_width = 30 * len(self.captcha_text)  # Reduzido de 40 para 30
-        width = min(max(280, base_width), 450)  # Limites ajustados
-        height = 100
+        """Gera uma imagem CAPTCHA com tamanho aumentado e texto centralizado"""
+        # Tamanho aumentado da imagem
+        width, height = 400, 120  # Aumentado para 400x120 pixels
         
         image = Image.new('RGB', (width, height), color='#ffffff')
         draw = ImageDraw.Draw(image)
         
         # Adicionar ruído de fundo
-        for _ in range(800):
+        for _ in range(1000):  # Aumentado o ruído para preencher a imagem maior
             x, y = random.randint(0, width), random.randint(0, height)
-            size = random.randint(1, 2)
+            size = random.randint(1, 3)
             color = random.choice(['#f7fafc', '#edf2f7', '#e2e8f0'])
             draw.rectangle((x, y, x+size, y+size), fill=color)
         
         # Adicionar linhas de interferência
-        for _ in range(5):
+        for _ in range(6):  # Aumentado o número de linhas
             x1, y1 = random.randint(0, width), random.randint(0, height)
             x2, y2 = random.randint(0, width), random.randint(0, height)
             color = random.choice(['#e2e8f0', '#cbd5e0'])
             draw.line((x1, y1, x2, y2), fill=color, width=1)
         
-        # Fonte
+        # Fonte maior
         try:
-            font = ImageFont.truetype("arialbd.ttf", 32)
+            font = ImageFont.truetype("arialbd.ttf", 40)  # Aumentado para 40px
         except:
+            # Fallback para fonte padrão se arialbd não estiver disponível
             font = ImageFont.load_default()
         
-        # Desenhar o texto com posicionamento ajustado e espaçamento reduzido
+        # Calcular a largura total do texto
         text = self.captcha_text
-        total_text_width = 0
-        char_images = []
+        text_width = 0
+        char_widths = []
         
-        # Primeiro passe: criar imagens de cada caractere
         for char in text:
+            if hasattr(font, 'getbbox'):
+                bbox = font.getbbox(char)
+                char_width = bbox[2] - bbox[0]
+            else:
+                # Para versões mais antigas do PIL
+                char_width = font.getsize(char)[0]
+            char_widths.append(char_width)
+            text_width += char_width
+        
+        # Adicionar espaçamento entre caracteres
+        spacing = 6  # Aumentado ligeiramente o espaçamento
+        text_width += (len(text) - 1) * spacing
+        
+        # Calcular a posição inicial para centralizar o texto
+        x_start = (width - text_width) // 2
+        y_position = (height - 50) // 2  # Ajustado para a nova altura
+        
+        # Desenhar cada caractere individualmente com efeitos visuais
+        x_offset = x_start
+        for i, char in enumerate(text):
+            # Cor aleatória para cada caractere
             colors = ['#357ae8', '#2d3748', '#2b6cb0']
             color = random.choice(colors)
-            angle = random.randint(-15, 15)
             
-            char_image = Image.new('RGBA', (30, 50), (0, 0, 0, 0))  # Largura reduzida
-            char_draw = ImageDraw.Draw(char_image)
-            char_draw.text((5, 5), char, fill=color, font=font)  # Posição ajustada
+            # Pequena rotação aleatória
+            angle = random.randint(-12, 12)  # Aumentado ligeiramente a rotação
             
-            rotated_char = char_image.rotate(angle, expand=1, resample=Image.BICUBIC)
-            char_images.append(rotated_char)
-            total_text_width += rotated_char.width
-        
-        # Ajustar espaçamento (reduzido significativamente)
-        spacing = 3  # Reduzido de 10 para 3
-        total_width = total_text_width + (spacing * (len(text) - 1))
-        
-        # Centralizar horizontalmente
-        x_offset = (width - total_width) // 2 if width > total_width else 5
-        
-        # Segundo passe: posicionar os caracteres com espaçamento reduzido
-        for i, rotated_char in enumerate(char_images):
-            y = 35 + random.randint(-8, 8)
-            image.paste(rotated_char, (x_offset, y), rotated_char)
-            x_offset += rotated_char.width + spacing
+            # Deslocamento vertical aleatório
+            y_offset = y_position + random.randint(-8, 8)  # Aumentado o deslocamento
+            
+            # Criar uma imagem para o caractere individual
+            char_img = Image.new('RGBA', (char_widths[i] + 15, 60), (0, 0, 0, 0))  # Aumentado o tamanho
+            char_draw = ImageDraw.Draw(char_img)
+            char_draw.text((7, 10), char, fill=color, font=font)  # Ajustada a posição
+            
+            # Aplicar rotação
+            if angle != 0:
+                rotated_char = char_img.rotate(angle, expand=1, resample=Image.BICUBIC)
+                # Calcular a posição para manter o alinhamento
+                paste_x = x_offset - (rotated_char.width - char_widths[i]) // 2
+                paste_y = y_offset - (rotated_char.height - 50) // 2
+                image.paste(rotated_char, (paste_x, paste_y), rotated_char)
+            else:
+                image.paste(char_img, (x_offset, y_offset), char_img)
+            
+            # Avançar a posição para o próximo caractere
+            x_offset += char_widths[i] + spacing
         
         return image
 
@@ -272,7 +295,12 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         """Exibe a imagem CAPTCHA no label"""
         photo = ImageTk.PhotoImage(self.captcha_image)
         self.captcha_label.configure(image=photo)
-        self.captcha_label.image = photo
+        self.captcha_label.image = photo  # Manter referência
+
+    def clear_error_message(self):
+        """Limpa a mensagem de erro quando o usuário clica no campo de entrada"""
+        if "❌" in self.result_label.cget("text"):
+            self.result_label.configure(text="")
 
     def refresh_captcha(self):
         """Atualiza o CAPTCHA"""
@@ -355,26 +383,29 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         else:
             user_input = user_input.upper()
         
-        self.attempts += 1
-        remaining = self.max_attempts - self.attempts
-        
-        self.attempts_label.configure(
-            text=f"Tentativas restantes: {remaining}",
-            text_color="#e53e3e" if remaining == 1 else "#d69e2e"
-        )
+        # Limpar o campo de entrada independente do resultado
+        self.entry.delete(0, 'end')
         
         if user_input == self.captcha_text:
             self.result_label.configure(text="✔️ Verificação bem-sucedida!", text_color="#48bb78",font=ctk.CTkFont(size=13, family="Segoe UI Emoji", weight="bold"))
             self.after(1000, self.destroy)
             return True
         else:
+            self.attempts += 1
+            remaining = self.max_attempts - self.attempts
+            
+            self.attempts_label.configure(
+                text=f"Tentativas restantes: {remaining}",
+                text_color="#e53e3e" if remaining == 1 else "#d69e2e"
+            )
+            
             if self.attempts >= self.max_attempts:
                 self.result_label.configure(text="❌ Número máximo de tentativas excedido!", text_color="#e53e3e", font=ctk.CTkFont(size=13, family="Segoe UI Emoji", weight="bold"))
                 self.after(2000, self.destroy)
                 return False
             else:
                 self.result_label.configure(text="❌ Resposta incorreta. Tente novamente.", text_color="#e53e3e", font=ctk.CTkFont(size=13, family="Segoe UI Emoji", weight="bold"))
-                self.refresh_captcha()
+                # Não chama refresh_captcha automaticamente, apenas mostra a mensagem de erro
                 return False
 
 if __name__ == "__main__":
