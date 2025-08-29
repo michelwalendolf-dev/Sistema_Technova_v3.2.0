@@ -18,6 +18,7 @@ class TelaProduto(ctk.CTkToplevel):
         self.parent = parent
         self.produto = produto
         self.title("Cadastro de Produto" if not produto else "Editar Produto")
+        self.iconbitmap(os.path.join("Icones", "produtos.ico"))
         self.geometry("550x600")
         self.resizable(True, True)
         
@@ -531,6 +532,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Sistema de Locação de Androides")
+        self.janela_produto = None 
 
         self.after(100, self.maximizar_window)
 
@@ -629,9 +631,12 @@ class App(ctk.CTk):
         self.state('zoomed')
     
     def abrir_tela_produto(self, produto=None):
-        janela = TelaProduto(self, produto)
-        janela.grab_set()  
-        janela.focus_set()  
+        if self.janela_produto is None or not self.janela_produto.winfo_exists():
+            self.janela_produto = TelaProduto(self, produto)
+            self.janela_produto.grab_set()
+            self.janela_produto.focus_set()
+        else:
+            self.janela_produto.focus_set()
     
     def editar_produto(self):
         selected = self.treeview_produtos.selection()
