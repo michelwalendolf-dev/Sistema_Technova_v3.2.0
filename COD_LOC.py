@@ -18,16 +18,11 @@ class TelaProduto(ctk.CTkToplevel):
         self.parent = parent
         self.produto = produto
         self.title("Cadastro de Produto" if not produto else "Editar Produto")
-        self.iconbitmap(os.path.join("Icones", "produtos.ico"))
         self.geometry("550x600")
         self.resizable(True, True)
         
-        # Adicionar ícone
-        try:
-            icon_path = os.path.join("Icones", "produtos.ico")
-            self.iconbitmap(icon_path)
-        except Exception as e:
-            print(f"Erro ao carregar ícone: {e}")
+        # Configurar ícone usando iconphoto (mais confiável que iconbitmap)
+        self.after(100, self.set_icon)
         
         # Carregar imagens para série - manter como atributos da instância
         self.tk_img_sim = None
@@ -117,6 +112,23 @@ class TelaProduto(ctk.CTkToplevel):
         
         if produto:
             self.preencher_campos()
+            
+    def set_icon(self):
+        """Método para configurar o ícone da janela"""
+        try:
+            icon_path = os.path.join("Icones", "produtos.ico")
+            if not os.path.exists(icon_path):
+                print(f"Arquivo de ícone não encontrado: {icon_path}")
+                return
+                
+            # Usar iconphoto em vez de iconbitmap
+            icon_image = Image.open(icon_path)
+            icon_photo = ImageTk.PhotoImage(icon_image)
+            self.iconphoto(False, icon_photo)
+            # Manter uma referência para evitar garbage collection
+            self.icon_image = icon_photo
+        except Exception as e:
+            print(f"Erro ao carregar ícone: {e}")
     
     def gerar_codigo_sequencial(self):
         if not self.parent.dados_produtos:
@@ -336,7 +348,7 @@ class TelaProduto(ctk.CTkToplevel):
             if codigo_produto in self.parent.dados_series and self.parent.dados_series[codigo_produto]:
                 resposta = messagebox.askyesno(
                     "Atenção", 
-                    "Este produto possui números de série cadastrados.\nDeseja continuar?\033",
+                    "Este produto possui números de série cadastrados.\nDeseja continuar?",
                     parent=self
                 )
                 if not resposta:
@@ -450,34 +462,6 @@ class TelaProduto(ctk.CTkToplevel):
         self.parent.atualizar_treeview_produtos()
         self.destroy()
     
-    def preencher_campos(self):
-        if not self.produto:
-            return
-            
-        self.entry_codigo_sequencial.configure(state="normal")
-        self.entry_codigo_sequencial.delete(0, "end")
-        self.entry_codigo_sequencial.insert(0, self.produto.get("codigo_sequencial", ""))
-        self.entry_codigo_sequencial.configure(state="disabled")
-        
-        self.entry_marca.insert(0, self.produto.get("marca", ""))
-        self.entry_valor.insert(0, self.produto.get("valor", "").replace("R$ ", ""))
-        self.entry_peso.insert(0, self.produto.get("peso", ""))
-        self.entry_altura.insert(0, self.produto.get("altura", ""))
-        self.entry_largura.insert(0, self.produto.get("largura", ""))
-        self.combo_tipo.set(self.produto.get("tipo", ""))
-        
-        self.entry_codigo_editavel.insert(0, self.produto.get("codigo", "").replace("COD", ""))
-        self.entry_nome.insert(0, self.produto.get("nome", ""))
-        self.combo_grupo.set(self.produto.get("grupo", ""))
-        self.combo_estoque.set(self.produto.get("local_estoque", ""))
-        self.entry_fornecedor.insert(0, self.produto.get("fornecedor", ""))
-        self.entry_quantidade_estoque.insert(0, self.produto.get("estoque", "").replace(" unidades", ""))
-        
-        self.variavel_controle_serie.set(self.produto.get("controla_serie", False))
-        self.variavel_inativo.set(self.produto.get("inativo", False))
-        self.variavel_validade.set(self.produto.get("por_validade", False))
-        self.variavel_brinde.set(self.produto.get("brinde", False))
-    
     def salvar_produto(self):
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
@@ -532,7 +516,6 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Sistema de Locação de Androides")
-        self.janela_produto = None 
 
         self.after(100, self.maximizar_window)
 
@@ -631,12 +614,9 @@ class App(ctk.CTk):
         self.state('zoomed')
     
     def abrir_tela_produto(self, produto=None):
-        if self.janela_produto is None or not self.janela_produto.winfo_exists():
-            self.janela_produto = TelaProduto(self, produto)
-            self.janela_produto.grab_set()
-            self.janela_produto.focus_set()
-        else:
-            self.janela_produto.focus_set()
+        janela = TelaProduto(self, produto)
+        janela.grab_set()  
+        janela.focus_set()  
     
     def editar_produto(self):
         selected = self.treeview_produtos.selection()
