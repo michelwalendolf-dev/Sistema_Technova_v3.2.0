@@ -12,25 +12,27 @@ import tkinter.messagebox as messagebox
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
-class TelaProduto(ctk.CTk):
-    def __init__(self, produto=None):
-        print("Iniciando TelaProduto como janela principal")
-        super().__init__()
-        
+class TelaProduto(ctk.CTkToplevel):
+    def __init__(self, parent=None, produto=None):
+        super().__init__(parent)
+        self.parent = parent
         self.produto = produto
         self.title("Cadastro de Produto" if not produto else "Editar Produto")
-        
+
+        # Inicializar variáveis BooleanVar primeiro
+        self.variavel_controle_serie = ctk.BooleanVar()
+        self.variavel_validade = ctk.BooleanVar()
+        self.variavel_inativo = ctk.BooleanVar()
+        self.variavel_brinde = ctk.BooleanVar()
+
         # Carregar dados
         self.carregar_dados_json()
         
         # Configurar o ícone
         try:
             ico_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "produtos.ico")
-            print("Caminho do ícone:", ico_path)
             if os.path.exists(ico_path):
                 self.after(200, lambda: self.wm_iconbitmap(ico_path))
-            else:
-                print(f"Arquivo de ícone não encontrado: {ico_path}")
         except Exception as e:
             print(f"Erro ao carregar ícone: {e}")
             
@@ -109,6 +111,11 @@ class TelaProduto(ctk.CTk):
         if produto:
             self.preencher_campos()
             
+        # Configurar para ser modal
+        self.transient(parent)
+        self.grab_set()
+        self.focus()
+            
     def carregar_dados_json(self):
         try:
             with open('produtos.json', 'r') as f:
@@ -139,7 +146,7 @@ class TelaProduto(ctk.CTk):
                 ],
                 "COD004": [
                     {"serie": "SERIE-0004", "alternativa": "ALT-004", "estoque": "Estoque 1", "status": "Ativa"},
-                    {"serie": "SERIE-0005", "alternativa": "", "estoque": "Estoque 3", "status": "Ativa"}
+                    {"serie": "SERIE-0005", "alternativa": "", "estoque": "Estoque 3", "status": "Inativa"}
                 ],
                 "COD006": [
                     {"serie": "SERIE-0006", "alternativa": "ALT-006", "estoque": "Estoque 2", "status": "Ativa"},
@@ -177,7 +184,7 @@ class TelaProduto(ctk.CTk):
     def mostrar_aba_cadastro(self):
         self.aba_cadastro.configure(fg_color="#4CAF50", font=ctk.CTkFont(size=14, weight="bold"))
         self.aba_anexo.configure(fg_color="#9E9E9E", font=ctk.CTkFont(size=14))
-        
+
         for widget in self.frame_conteudo.winfo_children():
             widget.destroy()
             
@@ -246,7 +253,7 @@ class TelaProduto(ctk.CTk):
         
         label_largura = ctk.CTkLabel(frame_esquerda, text="Largura (cm):", anchor="w", text_color="black")
         label_largura.pack(fill="x", pady=(0, 5))
-        
+
         self.entry_largura = ctk.CTkEntry(frame_esquerda, fg_color="white", text_color="black")
         self.entry_largura.pack(fill="x", pady=(0, 10))
         
@@ -325,7 +332,7 @@ class TelaProduto(ctk.CTk):
         checkbox_direito = ctk.CTkFrame(checkbox_frame, fg_color="white")
         checkbox_direito.pack(side="right", fill="both", expand=True)
         
-        self.variavel_controle_serie = ctk.BooleanVar()
+        # Usar as variáveis BooleanVar já inicializadas
         self.check_controle_serie = ctk.CTkCheckBox(
             checkbox_esquerdo, 
             text="Controlado por Série",
@@ -335,7 +342,6 @@ class TelaProduto(ctk.CTk):
         )
         self.check_controle_serie.pack(fill="x", pady=(0, 5))
         
-        self.variavel_validade = ctk.BooleanVar()
         self.check_validade = ctk.CTkCheckBox(
             checkbox_esquerdo, 
             text="Por Validade",
@@ -344,7 +350,6 @@ class TelaProduto(ctk.CTk):
         )
         self.check_validade.pack(fill="x", pady=(0, 5))
         
-        self.variavel_inativo = ctk.BooleanVar()
         self.check_inativo = ctk.CTkCheckBox(
             checkbox_direito, 
             text="Inativo",
@@ -353,7 +358,6 @@ class TelaProduto(ctk.CTk):
         )
         self.check_inativo.pack(fill="x", pady=(0, 5))
         
-        self.variavel_brinde = ctk.BooleanVar()
         self.check_brinde = ctk.CTkCheckBox(
             checkbox_direito, 
             text="Brinde",
@@ -440,10 +444,9 @@ class TelaProduto(ctk.CTk):
         self.variavel_brinde.set(self.produto.get("brinde", False))
     
     def salvar_edicao_produto(self):
-        print("Chamou salvar_edicao_produto")
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
-            not self.variavel_contrope_serie.get() and
+            not self.variavel_controle_serie.get() and
             self.produto["codigo"] in self.dados_series and
             self.dados_series[self.produto["codigo"]]):
             
@@ -488,7 +491,6 @@ class TelaProduto(ctk.CTk):
         self.destroy()
     
     def salvar_produto(self):
-        print("Chamou salvar_produto")
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
             not self.variavel_controle_serie.get() and
@@ -529,13 +531,17 @@ class TelaProduto(ctk.CTk):
                 if produto["codigo"] == self.produto["codigo"]:
                     self.dados_produtos[i] = dados
                     break
-        else:
-            self.dados_produtos.append(dados)
-        
-        self.salvar_dados_json()
-        self.destroy()
+            else:
+                self.dados_produtos.append(dados)
+            self.salvar_dados_json()
+            if self.parent and hasattr(self.parent, 'atualizar_treeview_produtos'):
+                self.parent.atualizar_treeview_produtos()
+            self.destroy()
 
+# Código para executar standalone
 if __name__ == "__main__":
-    app = TelaProduto()
+    root = ctk.CTk()
+    root.withdraw()
+    app = TelaProduto(root)
     app.mainloop()
-print("TelaProduto criada com sucesso")
+    root.mainloop()
