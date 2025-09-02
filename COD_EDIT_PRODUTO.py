@@ -1,10 +1,6 @@
 import customtkinter as ctk
-import time
-from PIL import Image, ImageTk
 import os
 import tkinter as tk
-import tkinter.font as tkfont
-import subprocess
 from tkinter import ttk
 import json
 import tkinter.messagebox as messagebox
@@ -13,11 +9,12 @@ ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
 class TelaProduto(ctk.CTkToplevel):
-    def __init__(self, parent=None, produto=None):
+    def __init__(self, parent=None, produto=None, callback_atualizacao=None):
         super().__init__(parent)
         self.parent = parent
         self.produto = produto
         self.title("Cadastro de Produto" if not produto else "Editar Produto")
+        self.callback_atualizacao = callback_atualizacao 
 
         # Inicializar variáveis BooleanVar primeiro
         self.variavel_controle_serie = ctk.BooleanVar()
@@ -490,7 +487,11 @@ class TelaProduto(ctk.CTkToplevel):
         self.salvar_dados_json()
         self.destroy()
     
+    def set_callback(self, callback):
+        self.callback = callback
+    
     def salvar_produto(self):
+        # Verificação de série (apenas para edição)
         if (self.produto and 
             self.produto.get("controla_serie", False) and 
             not self.variavel_controle_serie.get() and
@@ -503,8 +504,12 @@ class TelaProduto(ctk.CTkToplevel):
                 parent=self
             )
             if not resposta:
-                return  
-        
+                return
+
+        # Coletar dados do formulário
+        codigo_editavel = self.entry_codigo_editavel.get()
+        codigo = f"COD{codigo_editavel}" if codigo_editavel else f"COD{self.codigo_sequencial}"
+
         dados = {
             "codigo_sequencial": self.entry_codigo_sequencial.get(),
             "marca": self.entry_marca.get(),
@@ -513,7 +518,7 @@ class TelaProduto(ctk.CTkToplevel):
             "altura": self.entry_altura.get(),
             "largura": self.entry_largura.get(),
             "tipo": self.combo_tipo.get(),
-            "codigo": f"COD{self.entry_codigo_editavel.get()}" if self.entry_codigo_editavel.get() else f"COD{self.codigo_sequencial}",
+            "codigo": codigo,
             "nome": self.entry_nome.get(),
             "grupo": self.combo_grupo.get(),
             "local_estoque": self.combo_estoque.get(),
@@ -531,12 +536,18 @@ class TelaProduto(ctk.CTkToplevel):
                 if produto["codigo"] == self.produto["codigo"]:
                     self.dados_produtos[i] = dados
                     break
-            else:
-                self.dados_produtos.append(dados)
-            self.salvar_dados_json()
-            if self.parent and hasattr(self.parent, 'atualizar_treeview_produtos'):
-                self.parent.atualizar_treeview_produtos()
-            self.destroy()
+        else:
+            self.dados_produtos.append(dados)
+
+        self.salvar_dados_json()
+
+        if self.parent and hasattr(self.parent, 'atualizar_treeview_produtos'):
+            self.parent.atualizar_treeview_produtos()
+        
+        if self.callback_atualizacao:
+            self.callback_atualizacao()
+
+        self.destroy() 
 
 # Código para executar standalone
 if __name__ == "__main__":
@@ -545,3 +556,4 @@ if __name__ == "__main__":
     app = TelaProduto(root)
     app.mainloop()
     root.mainloop()
+    

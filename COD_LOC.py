@@ -3,7 +3,6 @@ import time
 from PIL import Image, ImageTk
 import os
 import tkinter as tk
-import tkinter.font as tkfont
 import subprocess
 from tkinter import ttk
 import json
@@ -43,27 +42,32 @@ class App(ctk.CTk):
             self.marcadagua_ctk_image = None
 
         # Carregar imagens para série (sim e não) - manter como atributos
-        self.tk_img_sim = None
-        self.tk_img_nao = None
+        self.tk_images = []  # Lista para manter as referências das imagens
         try:
-            self.img_sim = Image.open(os.path.join("Icones", "sim.ico"))
-            self.img_nao = Image.open(os.path.join("Icones", "nao.ico"))
+            img_sim = Image.open(os.path.join("Icones", "sim.ico"))
+            img_nao = Image.open(os.path.join("Icones", "nao.ico"))
 
             # Redimensionar se necessário
-            self.img_sim = self.img_sim.resize((20, 20), Image.LANCZOS)
-            self.img_nao = self.img_nao.resize((20, 20), Image.LANCZOS)
+            img_sim = img_sim.resize((20, 20), Image.LANCZOS)
+            img_nao = img_nao.resize((20, 20), Image.LANCZOS)
             
             # Converter para formato Tkinter e manter como atributos
-            self.tk_img_sim = ImageTk.PhotoImage(self.img_sim)
-            self.tk_img_nao = ImageTk.PhotoImage(self.img_nao)
+            self.tk_img_sim = ImageTk.PhotoImage(img_sim)
+            self.tk_img_nao = ImageTk.PhotoImage(img_nao)
+            
+            # Manter referências na lista
+            self.tk_images.extend([self.tk_img_sim, self.tk_img_nao])
         except Exception as e:
             print(f"Erro ao carregar imagens de série: {e}")
+            self.tk_img_sim = None
+            self.tk_img_nao = None
 
         self.carregar_dados_json()
 
         self.produto_selecionado = None
         self.criar_widgets()
         self.atualizar_relogio()
+        self.tela_produto = None
 
     def carregar_dados_json(self):
         try:
@@ -115,18 +119,24 @@ class App(ctk.CTk):
         self.state('zoomed')
     
     def abrir_tela_produto(self, produto=None):
+        if hasattr(self, 'tela_produto') and self.tela_produto is not None and self.tela_produto.winfo_exists():
+            self.tela_produto.lift()
+            self.tela_produto.focus()
+            return
+            
         try:
             from COD_EDIT_PRODUTO import TelaProduto
-            tela_produto = TelaProduto(self, produto=produto)
-            # Foca na janela e espera até que ela seja fechada
+            tela_produto = TelaProduto(self, produto=produto, callback_atualizacao=self.atualizar_treeview_produtos)
             tela_produto.transient(self)
             tela_produto.grab_set()
             tela_produto.focus()
             self.wait_window(tela_produto)
-            # Atualiza a treeview após fechar a janela
             self.atualizar_treeview_produtos()
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao abrir editor de produtos: {e}")
+        finally:
+            if hasattr(self, 'tela_produto'):
+                self.tela_produto = None
     
     def editar_produto(self):
         selected = self.treeview_produtos.selection()
@@ -167,9 +177,10 @@ class App(ctk.CTk):
     def atualizar_treeview_produtos(self):
         for item in self.treeview_produtos.get_children():
             self.treeview_produtos.delete(item)
+
+        self.carregar_dados_json()
         
         for produto in self.dados_produtos:
-            # Determinar a imagem com base no valor de "serie"
             if produto["serie"] == "Sim":
                 imagem = self.tk_img_sim
             else:
@@ -661,7 +672,7 @@ class App(ctk.CTk):
         estilo = ttk.Style()
         estilo.theme_use("clam")
         estilo.configure("Treeview.Heading", font=("Roboto", 13, "bold"), background="#ebebeb")
-        estilo.configure("Treeview", font=("Segoe UI Emoji", 12))
+        estilo.configure("Treeview", font=("Segoe UI Emoji", 12), background="white", fieldbackground="white", foreground="black")
 
         colunas = ("serie", "codigo", "nome", "marca", "valor", "estoque")
         self.treeview_produtos = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
@@ -673,7 +684,7 @@ class App(ctk.CTk):
         self.treeview_produtos.heading("valor", text="Valor")
         self.treeview_produtos.heading("estoque", text="Estoque")
 
-        self.treeview_produtos.column("serie", width=60, anchor="center")
+        self.treeview_produtos.column("serie", width=60, anchor="center", stretch=False)
         self.treeview_produtos.column("codigo", width=100, anchor="center")
         self.treeview_produtos.column("nome", width=200, anchor="w")
         self.treeview_produtos.column("marca", width=120, anchor="w")

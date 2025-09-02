@@ -86,7 +86,7 @@ def buscar_pessoa_por_documento(documento):
                 return pessoa, tipo
     return None, None
 
-class LoginApp(ctk.CTk):
+class TelaLogin(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Login")
@@ -339,15 +339,15 @@ class LoginApp(ctk.CTk):
         btn_locacao.pack(side="left", padx=20)
 
     def abrir_registro(self):
-        win = RegistrarUsuarioWindow(self)
+        win = TelaRegistroUsuario(self)
         win.grab_set()
 
     def abrir_principal(self, user):
         self.withdraw()
-        win = PrincipalWindow(self, user)
+        win = TelaPrincipal(self, user)
         win.grab_set()
 
-class RegistrarUsuarioWindow(ctk.CTkToplevel):
+class TelaRegistroUsuario(ctk.CTkToplevel):
     def __init__(self, master, dados_usuario=None):
         super().__init__(master)
         self.title("Registrar-se" if not dados_usuario else "Alterar Dados do Usuário")
@@ -588,7 +588,7 @@ class RegistrarUsuarioWindow(ctk.CTkToplevel):
             else:
                 messagebox.showerror("Erro", "Usuário não encontrado para atualização.")
 
-class CadastroPessoaWindow(ctk.CTkToplevel):
+class TelaCadastroPessoa(ctk.CTkToplevel):
     def __init__(self, master, pessoa=None):
         super().__init__(master)
         self.title("Cadastrar Pessoa" if not pessoa else "Editar Pessoa")
@@ -869,7 +869,7 @@ class CadastroPessoaWindow(ctk.CTkToplevel):
         self.master.master.atualizar_lista()
         self.destroy()
 
-class BuscaPessoaWindow(ctk.CTkToplevel):
+class TelaBuscaPessoa(ctk.CTkToplevel):
     def __init__(self, master, acao):
         super().__init__(master)
         self.title(f"{acao.capitalize()} Pessoa")
@@ -982,7 +982,7 @@ class BuscaPessoaWindow(ctk.CTkToplevel):
             self.destroy()
     
     def editar_pessoa(self):
-        win = CadastroPessoaWindow(self.master, self.pessoa)
+        win = TelaCadastroPessoa(self.master, self.pessoa)
         win.grab_set()
         self.destroy()
     
@@ -1007,7 +1007,7 @@ class BuscaPessoaWindow(ctk.CTkToplevel):
         
         messagebox.showinfo("Detalhes da Pessoa", detalhes)
 
-class ExportarWindow(ctk.CTkToplevel):
+class TelaExportar(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
         self.title("Exportar Dados")
@@ -1113,7 +1113,7 @@ class ExportarWindow(ctk.CTkToplevel):
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao exportar: {str(e)}")
 
-class ImportarWindow(ctk.CTkToplevel):
+class TelaImportar(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
         self.title("Importar Dados")
@@ -1298,7 +1298,7 @@ class ImportarWindow(ctk.CTkToplevel):
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao importar: {str(e)}")
 
-class PrincipalWindow(ctk.CTkToplevel):
+class TelaPrincipal(ctk.CTkToplevel):
     def __init__(self, master, user):
         super().__init__(master)
         self.title("Sistema de Cadastros")
@@ -1454,23 +1454,23 @@ class PrincipalWindow(ctk.CTkToplevel):
             messagebox.showerror("Erro", f"Não foi possível abrir a tela sobre:\n{str(e)}")
     
     def abrir_pesquisar(self):
-        win = BuscaPessoaWindow(self, "pesquisar")
+        win = TelaCadastroPessoa(self, "pesquisar")
         win.grab_set()
     
     def abrir_excluir(self):
-        win = BuscaPessoaWindow(self, "excluir")
+        win = TelaCadastroPessoa(self, "excluir")
         win.grab_set()
     
     def abrir_editar(self):
-        win = BuscaPessoaWindow(self, "editar")
+        win = TelaCadastroPessoa(self, "editar")
         win.grab_set()
     
     def abrir_importar(self):
-        win = ImportarWindow(self)
+        win = TelaImportar(self)
         win.grab_set()
     
     def abrir_exportar(self):
-        win = ExportarWindow(self)
+        win = TelaExportar(self)
         win.grab_set()
     
     def layout_principal(self):
@@ -1658,13 +1658,13 @@ class PrincipalWindow(ctk.CTkToplevel):
         self.alterar_info_btn.grid(row=0, column=1, sticky="sw", pady=(10, 20), padx=(30,30))
 
     def abrir_cadastro_menu(self):
-        win = CadastroPessoaWindow(self)
+        win = TelaCadastroPessoa(self)
         win.grab_set()
         win.wait_window()
         self.atualizar_lista()
 
     def alterar_informacoes_usuario(self):
-        win = RegistrarUsuarioWindow(self, self.user)
+        win = TelaRegistroUsuario(self, self.user)
         win.grab_set()
         win.wait_window()
         self.atualizar_info_display_usuario()
@@ -1767,5 +1767,5 @@ if __name__ == "__main__":
                 json.dump([], f)
 
     ctk.set_appearance_mode("light")
-    app = LoginApp()
+    app = TelaLogin()
     app.mainloop()
