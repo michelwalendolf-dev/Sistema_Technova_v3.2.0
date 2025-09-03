@@ -27,7 +27,7 @@ class TelaProduto(ctk.CTkToplevel):
         
         # Configurar o ícone
         try:
-            ico_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "produtos.ico")
+            ico_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icones//produtos.ico")
             if os.path.exists(ico_path):
                 self.after(200, lambda: self.wm_iconbitmap(ico_path))
         except Exception as e:

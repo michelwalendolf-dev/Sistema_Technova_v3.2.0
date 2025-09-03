@@ -1,6 +1,6 @@
 import customtkinter as ctk 
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageDraw
 import json
 import os
 import re
@@ -12,7 +12,6 @@ import pandas as pd
 import math
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from openpyxl.utils import get_column_letter
 
 ARQUIVO_USUARIOS = "usuarios.json"
 ARQUIVO_PESSOAS = {
@@ -93,9 +92,12 @@ class TelaLogin(ctk.CTk):
         self.configure(fg_color="#202020")
         self.usuario_var = ctk.StringVar()
         self.senha_var = ctk.StringVar()
+        self.captcha_var = ctk.BooleanVar(value=False)
         self.erros = {}
+        self.captcha_verified = False
         self.build_login()
         self.after_idle(lambda: self.state("zoomed"))
+        self.iconbitmap("icones//logo.ico")
 
     def build_login(self):
         for widget in self.winfo_children():
@@ -194,6 +196,48 @@ class TelaLogin(ctk.CTk):
         )
         self.senha_asterisk.place(relx=0.68, rely=0.44)
 
+        # Frame do CAPTCHA
+        captcha_frame = ctk.CTkFrame(login_frame, fg_color="transparent")
+        captcha_frame.pack(pady=(15, 5), fill="x", padx=130)
+
+        # Checkbox do CAPTCHA
+        self.captcha_checkbox = ctk.CTkCheckBox(
+            captcha_frame,
+            text="",
+            variable=self.captcha_var,
+            width=20,
+            height=20,
+            command=self.verificar_captcha,
+            state="disabled"
+        )
+        self.captcha_checkbox.pack(side="left", padx=(0, 10))
+
+        # Label do CAPTCHA
+        captcha_label = ctk.CTkLabel(
+            captcha_frame,
+            text="Captcha",
+            font=("Roboto", 14)
+        )
+        captcha_label.pack(side="left", padx=(0, 5))
+
+        # Imagem do CAPTCHA (20x20)
+        try:
+            captcha_img = Image.open("icones//captcha.png").resize((20, 20), Image.LANCZOS)
+            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(20, 20))
+            ctk.CTkLabel(captcha_frame, image=self.captcha_icon, text="").pack(side="left")
+        except:
+            # Fallback se a imagem não existir
+            ctk.CTkLabel(captcha_frame, text="[Ícone]", font=("Roboto", 10)).pack(side="left")
+
+        # Label de status do CAPTCHA
+        self.captcha_status_label = ctk.CTkLabel(
+            login_frame,
+            text="",
+            text_color="#e74c3c",
+            font=("Roboto", 11)
+        )
+        self.captcha_status_label.pack(pady=(2, 5))
+
         self.msg_label = ctk.CTkLabel(
             login_frame, 
             text="", 
@@ -254,7 +298,68 @@ class TelaLogin(ctk.CTk):
             command=lambda: None
         ).pack(side="left", padx=(4,0))
 
+    def verificar_captcha(self):
+        if not self.captcha_verified:
+            try:
+                # Obter caminho absoluto do script CAPTCHA
+                captcha_script = os.path.join(os.path.dirname(__file__), "COD_CAPTCHA.py")
+                
+                # Mostrar mensagem de carregamento
+                self.captcha_status_label.configure(text="Abrindo CAPTCHA...")
+                self.update()
+                
+                # Executar o CAPTCHA em um processo separado
+                result = subprocess.run(
+                    [sys.executable, captcha_script],
+                    capture_output=True,
+                    text=True,
+                    timeout=120  # Timeout de 2 minutos
+                )
+                
+                if result.returncode == 0:
+                    # CAPTCHA bem-sucedido
+                    self.captcha_verified = True
+                    self.captcha_status_label.configure(text="Verificado com sucesso!")
+                    self.animar_verificacao()
+                    self.captcha_var.set(True)
+                else:
+                    # CAPTCHA falhou
+                    self.captcha_var.set(False)
+                    self.captcha_status_label.configure(text="CAPTCHA não concluído. Tente novamente.")
+                    self.captcha_checkbox.configure(fg_color="#ffcccc", hover_color="#ffcccc")
+                    
+            except subprocess.TimeoutExpired:
+                messagebox.showerror("Erro", "Tempo limite excedido para o CAPTCHA.")
+                self.captcha_var.set(False)
+                self.captcha_status_label.configure(text="Tempo excedido. Tente novamente.")
+                
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao executar CAPTCHA: {str(e)}")
+                self.captcha_var.set(False)
+                self.captcha_status_label.configure(text="Erro ao executar CAPTCHA.")
+
+    def animar_verificacao(self):
+        # Animação de verificação (simplificada)
+        self.captcha_checkbox.configure(fg_color="#2ecc71", hover_color="#2ecc71")
+        
+        # Adicionar efeito visual de verificado
+        verificacao_img = Image.new('RGBA', (20, 20), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(verificacao_img)
+        draw.line([(3, 10), (8, 15), (17, 5)], fill="white", width=2)
+        
+        self.verificacao_icon = ctk.CTkImage(
+            light_image=verificacao_img, 
+            dark_image=verificacao_img, 
+            size=(20, 20)
+        )
+        self.captcha_checkbox.configure(image=self.verificacao_icon)
+
     def login(self):
+        # Verificar CAPTCHA antes do login
+        if not self.captcha_verified:
+            self.captcha_status_label.configure(text="Complete o CAPTCHA para continuar")
+            return
+
         usuario = self.usuario_var.get()
         senha = self.senha_var.get()
         users = carregar_dados_banco(ARQUIVO_USUARIOS)
@@ -634,7 +739,7 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
                 values=["cliente", "funcionario", "fornecedor"],
                 command=self.atualizar_campos,
                 width=300, 
-                height=32, 
+            height=32, 
                 corner_radius=10, 
                 font=("Roboto", 12)
             )
@@ -1210,7 +1315,7 @@ class TelaImportar(ctk.CTkToplevel):
 
     def importar(self):
         if not self.file_path:
-            messagebox.showerror("Erro", "Selecione um arquivo CSV ou Excel.")
+            messagebox.showerror("Erro", "Selecione um arquivo CSV или Excel.")
             return
 
         try:
@@ -1219,7 +1324,7 @@ class TelaImportar(ctk.CTkToplevel):
             elif self.file_path.endswith('.xlsx'):
                 df = pd.read_excel(self.file_path)
             else:
-                messagebox.showerror("Erro", "Formato não suportado. Use CSV ou Excel.")
+                messagebox.showerror("Erro", "Formato não suportado. Use CSV или Excel.")
                 return
             
             campos_por_tipo = {
@@ -1400,7 +1505,7 @@ class TelaPrincipal(ctk.CTkToplevel):
                 self.center_button_container, 
                 text=texto, 
                 command=comando,
-                fg_color=cor, 
+            fg_color=cor, 
                 hover_color=hover_cor,
                 text_color="#fff",
                 font=("Roboto", 20, "bold"), 
@@ -1454,15 +1559,15 @@ class TelaPrincipal(ctk.CTkToplevel):
             messagebox.showerror("Erro", f"Não foi possível abrir a tela sobre:\n{str(e)}")
     
     def abrir_pesquisar(self):
-        win = TelaCadastroPessoa(self, "pesquisar")
+        win = TelaBuscaPessoa(self, "pesquisar")
         win.grab_set()
     
     def abrir_excluir(self):
-        win = TelaCadastroPessoa(self, "excluir")
+        win = TelaBuscaPessoa(self, "excluir")
         win.grab_set()
     
     def abrir_editar(self):
-        win = TelaCadastroPessoa(self, "editar")
+        win = TelaBuscaPessoa(self, "editar")
         win.grab_set()
     
     def abrir_importar(self):

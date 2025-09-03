@@ -14,7 +14,7 @@ ctk.set_default_color_theme("blue")
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.iconbitmap("logo.ico")
+        self.iconbitmap("icones//logo.ico")
         self.title("Sistema de Locação de Androides")
 
         self.after(100, self.maximizar_window)

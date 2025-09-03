@@ -1,19 +1,20 @@
 import customtkinter as ctk
-from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 import random
 import string
 import pyttsx3
 import threading
-import time
 
-class RefinedCaptchaWindow(ctk.CTkToplevel):
+class RefinedCaptchaWindow(ctk.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title("Verificação de Segurança")
         self.geometry("500x500")
         self.resizable(False, False)
         self.configure(fg_color="#f8f9fa")
-        
+        self.iconbitmap("icones//captcha.ico")
+        self.captcha_success = False 
+
         # Centralizar a janela
         self.update_idletasks()
         x = (self.winfo_screenwidth() // 2) - (500 // 2)
@@ -33,8 +34,6 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         
         # Exibir a imagem CAPTCHA
         self.refresh_captcha()
-        
-        self.grab_set()
 
     def create_widgets(self):
         # Frame principal
@@ -387,7 +386,8 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
         self.entry.delete(0, 'end')
         
         if user_input == self.captcha_text:
-            self.result_label.configure(text="✔️ Verificação bem-sucedida!", text_color="#48bb78",font=ctk.CTkFont(size=13, family="Segoe UI Emoji", weight="bold"))
+            self.captcha_success = True  # Adicionar esta linha
+            self.result_label.configure(...)
             self.after(1000, self.destroy)
             return True
         else:
@@ -400,20 +400,19 @@ class RefinedCaptchaWindow(ctk.CTkToplevel):
             )
             
             if self.attempts >= self.max_attempts:
-                self.result_label.configure(text="❌ Número máximo de tentativas excedido!", text_color="#e53e3e", font=ctk.CTkFont(size=13, family="Segoe UI Emoji", weight="bold"))
+                self.captcha_success = False  # Adicionar esta linha
+                self.result_label.configure(...)
                 self.after(2000, self.destroy)
                 return False
             else:
-                self.result_label.configure(text="❌ Resposta incorreta. Tente novamente.", text_color="#e53e3e", font=ctk.CTkFont(size=13, family="Segoe UI Emoji", weight="bold"))
-                # Não chama refresh_captcha automaticamente, apenas mostra a mensagem de erro
+                self.captcha_success = False  # Adicionar esta linha
                 return False
 
 if __name__ == "__main__":
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
     
-    root = ctk.CTk()
-    root.withdraw()
-    
-    app = RefinedCaptchaWindow(root)
+    app = RefinedCaptchaWindow()
     app.mainloop()
+
+    exit(0 if app.captcha_success else 1)
