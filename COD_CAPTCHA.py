@@ -4,8 +4,9 @@ import random
 import string
 import pyttsx3
 import threading
+import sys
 
-class RefinedCaptchaWindow(ctk.CTk):
+class CaptchaApp(ctk.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title("Verificação de Segurança")
@@ -408,11 +409,13 @@ class RefinedCaptchaWindow(ctk.CTk):
                 self.captcha_success = False  # Adicionar esta linha
                 return False
 
-if __name__ == "__main__":
-    ctk.set_appearance_mode("light")
-    ctk.set_default_color_theme("blue")
-    
-    app = RefinedCaptchaWindow()
-    app.mainloop()
+# No final do COD_CAPTCHA.py, substitua a linha exit(0 if app.captcha_success else 1) por:
 
-    exit(0 if app.captcha_success else 1)
+if __name__ == "__main__":
+    try:
+        app = CaptchaApp()
+        app.mainloop()
+        sys.exit(0 if app.captcha_success else 1)
+    except Exception as e:
+        print(f"Erro no CAPTCHA: {str(e)}")
+        sys.exit(1)
