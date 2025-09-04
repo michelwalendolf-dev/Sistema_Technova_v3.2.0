@@ -415,7 +415,6 @@ if __name__ == "__main__":
     try:
         app = CaptchaApp()
         app.mainloop()
-        sys.exit(0 if app.captcha_success else 1)
     except Exception as e:
         print(f"Erro no CAPTCHA: {str(e)}")
         sys.exit(1)

@@ -15,7 +15,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.iconbitmap("icones//logo.ico")
-        self.title("Sistema de Locação de Androides")
+        self.title("Sistema de Locação")
 
         self.after(100, self.maximizar_window)
 
