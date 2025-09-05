@@ -95,6 +95,7 @@ class TelaLogin(ctk.CTk):
         self.captcha_var = ctk.BooleanVar(value=False)
         self.erros = {}
         self.captcha_verified = False
+        self.captcha_error = False
         
         # Primeiro definimos todos os métodos
         self.verificar_captcha = self._verificar_captcha
@@ -129,13 +130,16 @@ class TelaLogin(ctk.CTk):
                 if result.returncode == 0:
                     # CAPTCHA bem-sucedido
                     self.captcha_verified = True
+                    self.captcha_error = False
                     self.animar_verificacao()
                     self.captcha_var.set(True)
+                    self.msg_label.configure(text="✓ verificação concluída!", text_color="green")
                 else:
                     # CAPTCHA falhou
+                    self.captcha_error = True
                     self.captcha_var.set(False)
                     error_msg = result.stderr.strip() if result.stderr else "CAPTCHA não concluído"
-                    messagebox.showerror("Erro", f"Falha no CAPTCHA: {error_msg}")
+                    self.msg_label.configure(text="CAPTCHA não verificado", text_color="#e74c3c")
                     self.captcha_checkbox.configure(
                         fg_color="#ffcccc",
                         hover_color="#ffcccc"
@@ -144,7 +148,7 @@ class TelaLogin(ctk.CTk):
             except FileNotFoundError as e:
                 messagebox.showerror("Erro", f"Arquivo CAPTCHA não encontrado: {str(e)}")
             except subprocess.TimeoutExpired:
-                messagebox.showerror("Erro", "Tempo excedido. Tente novamente.")
+                self.msg_label.configure(text="Tempo excedido no CAPTCHA", text_color="#e74c3c")
             except Exception as e:
                 messagebox.showerror("Erro", f"Erro inesperado: {str(e)}")
 
@@ -152,45 +156,56 @@ class TelaLogin(ctk.CTk):
         self.captcha_checkbox.configure(
             fg_color="#2ecc71", 
             hover_color="Transparent",
-            text="",  # Emoji de verificado
-            font=("Arial", 16)  # Tamanho do emoji
+            text="Não sou um robô", 
+            font=("Arial", 20),  
+            width=28,  
+            height=28   
         )
 
     def _login(self):
-        # Verificar CAPTCHA antes do login
-        if not self.captcha_verified:
-            messagebox.showwarning("CAPTCHA", "Complete o CAPTCHA para continuar")
-            return
-
         usuario = self.usuario_var.get()
         senha = self.senha_var.get()
         users = carregar_dados_banco(ARQUIVO_USUARIOS)
         user = next((u for u in users if u["usuario"] == usuario), None)
+        
+        # Resetar erros
         self.erros = {}
         self.usuario_asterisk.configure(text="")
         self.senha_asterisk.configure(text="")
         self.usuario_entry.configure(border_color="#ccc")
         self.senha_entry.configure(border_color="#ccc")
+        
+        # Verificar CAPTCHA primeiro
+        if not self.captcha_verified:
+            self.msg_label.configure(text="Complete o CAPTCHA para continuar", text_color="#e74c3c")
+            self.captcha_error = True
+            return
+        
+        # Verificar usuário e senha
         if not user and not any(u["senha"] == senha for u in users):
-            self.msg_label.configure(text="Usuário e senha estão incorretos.")
-            messagebox.showerror("Erro", "Usuário e senha estão incorretos ou não encontrados. verifique as informações e tente novamente.")
+            self.msg_label.configure(text="Usuário, senha e CAPTCHA incorretos" if self.captcha_error else "Usuário e senha incorretos")
+            messagebox.showerror("Erro", "Usuário e senha estão incorretos ou não encontrados. Verifique as informações e tente novamente.")
             self.usuario_entry.configure(border_color="#ffcccc")
             self.senha_entry.configure(border_color="#ffcccc")
             self.usuario_asterisk.configure(text="×")
             self.senha_asterisk.configure(text="×")
             return
+            
         if not user:
-            self.msg_label.configure(text="Usuário incorreto.")
-            messagebox.showerror("Erro", "Usuário incorreto. verifique as informações e tente novamente.")
+            self.msg_label.configure(text="Usuário incorreto" + (" e CAPTCHA não verificado" if self.captcha_error else ""))
+            messagebox.showerror("Erro", "Usuário incorreto. Verifique as informações e tente novamente.")
             self.usuario_entry.configure(border_color="#ffcccc")
             self.usuario_asterisk.configure(text="×")
             return
+            
         if user["senha"] != senha:
-            self.msg_label.configure(text="Senha incorreta.")
-            messagebox.showerror("Erro", "Senha incorreta. verifique as informações e tente novamente.")
+            self.msg_label.configure(text="Senha incorreta" + (" e CAPTCHA não verificado" if self.captcha_error else ""))
+            messagebox.showerror("Erro", "Senha incorreta. Verifique as informações e tente novamente.")
             self.senha_entry.configure(border_color="#ffcccc")
             self.senha_asterisk.configure(text="×")
             return
+            
+        # Se chegou aqui, login bem-sucedido
         self.msg_label.configure(text="")
         
         if user["filtro"] in ["Administrativo", "Desenvolvimento"]:
@@ -356,41 +371,44 @@ class TelaLogin(ctk.CTk):
             login_frame,
             fg_color="#f0f8ff",
             border_width=2,
-            border_color="#4F8CFF",
+            border_color="#929292",
             corner_radius=8
         )
         captcha_main_frame.pack(pady=(15, 5), fill="x", padx=130)
 
-        # Frame interno para os elementos do CAPTCHA
         captcha_inner_frame = ctk.CTkFrame(captcha_main_frame, fg_color="transparent")
         captcha_inner_frame.pack(padx=10, pady=8)
 
-        # Checkbox do CAPTCHA (aumentado)
+        # Checkbox do CAPTCHA (modificada)
         self.captcha_checkbox = ctk.CTkCheckBox(
             captcha_inner_frame,
-            text="",
+            text="Não sou um robô",  # Texto alterado
             variable=self.captcha_var,
-            width=50,  # Aumentado
-            height=70,  # Aumentado
-            command=self.verificar_captcha
+            width=58,  
+            height=58,  
+            corner_radius=5,  
+            border_width=2,
+            command=self.verificar_captcha,
+            font=("Roboto", 20)  
         )
         self.captcha_checkbox.pack(side="left", padx=(0, 10))
 
-        # Label do CAPTCHA com fonte maior
-        captcha_label = ctk.CTkLabel(
-            captcha_inner_frame,
-            text="Captcha",
-            font=("Roboto", 30, "bold")  # Fonte aumentada
-        )
-        captcha_label.pack(side="left", padx=(0, 5))
+        icon_frame = ctk.CTkFrame(captcha_inner_frame, fg_color="transparent")
+        icon_frame.pack(side="left", padx=(10, 0))
 
-        # Imagem do CAPTCHA (aumentada)
         try:
-            captcha_img = Image.open("icones//captcha.png").resize((100, 100), Image.LANCZOS)
-            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(40, 40))
-            ctk.CTkLabel(captcha_inner_frame, image=self.captcha_icon, text="").pack(side="left")
+            captcha_img = Image.open("icones//captcha.png").resize((30, 30), Image.LANCZOS)
+            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(30, 30))
+            ctk.CTkLabel(icon_frame, image=self.captcha_icon, text="").pack()
         except:
-            ctk.CTkLabel(captcha_inner_frame).pack(side="left")
+            ctk.CTkLabel(icon_frame).pack()
+
+        ctk.CTkLabel(
+            icon_frame,
+            text="TecTCHA",
+            font=("Roboto", 9),
+            text_color="black"
+        ).pack()
 
         self.msg_label = ctk.CTkLabel(
             login_frame, 
@@ -1851,7 +1869,7 @@ class TelaPrincipal(ctk.CTkToplevel):
                 
                 if len(pessoas) > 50:
                     ctk.CTkLabel(
-                        self.frames_pessoas[tipo], 
+                        self.frames_pessoas[tipo],  
                         text=f"... e mais {len(pessoas) - 50} registros", 
                         font=("Roboto", 10), 
                         text_color="#666"
