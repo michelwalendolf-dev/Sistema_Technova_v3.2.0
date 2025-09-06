@@ -96,8 +96,7 @@ class TelaLogin(ctk.CTk):
         self.erros = {}
         self.captcha_verified = False
         self.captcha_error = False
-        
-        # Primeiro definimos todos os métodos
+
         self.verificar_captcha = self._verificar_captcha
         self.animar_verificacao = self._animar_verificacao
         self.login = self._login
@@ -112,30 +111,26 @@ class TelaLogin(ctk.CTk):
     def _verificar_captcha(self):
         if not self.captcha_verified:
             try:
-                # Obter caminho absoluto do script CAPTCHA
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 captcha_script = os.path.join(script_dir, "COD_CAPTCHA.py")
                 
                 if not os.path.exists(captcha_script):
                     raise FileNotFoundError(f"Arquivo CAPTCHA não encontrado: {captcha_script}")
                 
-                # Executar o CAPTCHA em um processo separado
                 result = subprocess.run(
                     [sys.executable, captcha_script],
                     capture_output=True,
                     text=True,
-                    timeout=120  # Timeout de 2 minutos
+                    timeout=120  
                 )
                 
                 if result.returncode == 0:
-                    # CAPTCHA bem-sucedido
                     self.captcha_verified = True
                     self.captcha_error = False
                     self.animar_verificacao()
                     self.captcha_var.set(True)
                     self.msg_label.configure(text="✓ verificação concluída!", text_color="green")
                 else:
-                    # CAPTCHA falhou
                     self.captcha_error = True
                     self.captcha_var.set(False)
                     error_msg = result.stderr.strip() if result.stderr else "CAPTCHA não concluído"
@@ -149,17 +144,17 @@ class TelaLogin(ctk.CTk):
                 messagebox.showerror("Erro", f"Arquivo CAPTCHA não encontrado: {str(e)}")
             except subprocess.TimeoutExpired:
                 self.msg_label.configure(text="Tempo excedido no CAPTCHA", text_color="#e74c3c")
-            except Exception as e:
-                messagebox.showerror("Erro", f"Erro inesperado: {str(e)}")
 
     def _animar_verificacao(self):
         self.captcha_checkbox.configure(
             fg_color="#2ecc71", 
             hover_color="Transparent",
             text="Não sou um robô", 
-            font=("Arial", 20),  
+            font=("Roboto", 20),  
             width=28,  
-            height=28   
+            height=28,
+            state="disabled",
+            text_color_disabled="black"   
         )
 
     def _login(self):
@@ -168,22 +163,19 @@ class TelaLogin(ctk.CTk):
         users = carregar_dados_banco(ARQUIVO_USUARIOS)
         user = next((u for u in users if u["usuario"] == usuario), None)
         
-        # Resetar erros
         self.erros = {}
         self.usuario_asterisk.configure(text="")
         self.senha_asterisk.configure(text="")
         self.usuario_entry.configure(border_color="#ccc")
         self.senha_entry.configure(border_color="#ccc")
         
-        # Verificar CAPTCHA primeiro
         if not self.captcha_verified:
             self.msg_label.configure(text="Complete o CAPTCHA para continuar", text_color="#e74c3c")
             self.captcha_error = True
             return
         
-        # Verificar usuário e senha
         if not user and not any(u["senha"] == senha for u in users):
-            self.msg_label.configure(text="Usuário, senha e CAPTCHA incorretos" if self.captcha_error else "Usuário e senha incorretos")
+            self.msg_label.configure(text="Usuário, senha e CAPTCHA incorretos" if self.captcha_error else "Usuário e senha incorretos", text_color="#e74c3c")
             messagebox.showerror("Erro", "Usuário e senha estão incorretos ou não encontrados. Verifique as informações e tente novamente.")
             self.usuario_entry.configure(border_color="#ffcccc")
             self.senha_entry.configure(border_color="#ffcccc")
@@ -192,20 +184,19 @@ class TelaLogin(ctk.CTk):
             return
             
         if not user:
-            self.msg_label.configure(text="Usuário incorreto" + (" e CAPTCHA não verificado" if self.captcha_error else ""))
+            self.msg_label.configure(text="Usuário incorreto" + (" e CAPTCHA não verificado" if self.captcha_error else ""), text_color="#e74c3c")
             messagebox.showerror("Erro", "Usuário incorreto. Verifique as informações e tente novamente.")
             self.usuario_entry.configure(border_color="#ffcccc")
             self.usuario_asterisk.configure(text="×")
             return
             
         if user["senha"] != senha:
-            self.msg_label.configure(text="Senha incorreta" + (" e CAPTCHA não verificado" if self.captcha_error else ""))
+            self.msg_label.configure(text="Senha incorreta" + (" e CAPTCHA não verificado" if self.captcha_error else ""), text_color="#e74c3c")
             messagebox.showerror("Erro", "Senha incorreta. Verifique as informações e tente novamente.")
             self.senha_entry.configure(border_color="#ffcccc")
             self.senha_asterisk.configure(text="×")
             return
-            
-        # Se chegou aqui, login bem-sucedido
+
         self.msg_label.configure(text="")
         
         if user["filtro"] in ["Administrativo", "Desenvolvimento"]:
@@ -272,10 +263,11 @@ class TelaLogin(ctk.CTk):
     def build_login(self):
         for widget in self.winfo_children():
             widget.destroy()
-        frame_principal = ctk.CTkFrame(self, fg_color="#F4F1F1")
-        frame_principal.pack(fill="both", expand=True)
+        
+        main_container = ctk.CTkFrame(self, fg_color="#F4F1F1")
+        main_container.pack(fill="both", expand=True)    
 
-        img_frame = ctk.CTkFrame(frame_principal, fg_color="#202020")
+        img_frame = ctk.CTkFrame(main_container, fg_color="#202020")
         img_frame.place(relx=0, rely=0, relwidth=0.55, relheight=1)
 
         try:
@@ -294,22 +286,26 @@ class TelaLogin(ctk.CTk):
             img_frame.bind("<Configure>", resize_img)
         except Exception as e:
             pass
+        
+        login_container = ctk.CTkFrame(main_container, fg_color="transparent")
+        login_container.place(relx=0.55, rely=0, relwidth=0.45, relheight=1)
 
         login_frame = ctk.CTkFrame(
-            frame_principal,
+            login_container,
             fg_color="#ffffff",
             corner_radius=18,
             border_color="#D5D5D5",
-            border_width=2
+            border_width=2,
+            width=400, height=600
         )
-        login_frame.place(relx=0.6, rely=0.15, relwidth=0.35, relheight=0.7)
+        login_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         ctk.CTkLabel(
             login_frame, 
             text="Bem-vindo!", 
             font=("Roboto", 55, "bold"), 
             text_color="#464646"
-        ).pack(pady=(30, 10))
+        ).pack(pady=(20, 10))
 
         ctk.CTkFrame(login_frame, fg_color="transparent", height=100).pack()
 
@@ -318,7 +314,8 @@ class TelaLogin(ctk.CTk):
             text="Usuário*", 
             font=("Roboto", 12), 
             anchor="w", 
-            justify="left"
+            justify="left",
+
         )
         usuario_label.pack(pady=(0,0), padx=(130), anchor="w") 
         self.usuario_entry = ctk.CTkEntry(
@@ -337,14 +334,14 @@ class TelaLogin(ctk.CTk):
             font=("Roboto", 24, "bold"), 
             fg_color="#f9f9fa"
         )
-        self.usuario_asterisk.place(relx=0.68, rely=0.34)
+        self.usuario_asterisk.place(relx=0.72, rely=0.40)
 
         senha_label = ctk.CTkLabel(
             login_frame, 
             text="Senha*", 
             font=("Roboto", 12), 
             anchor="w", 
-            justify="left"
+            justify="left",
         )
         senha_label.pack(pady=(8,0), padx=(130), anchor="w") 
         self.senha_entry = ctk.CTkEntry(
@@ -364,14 +361,13 @@ class TelaLogin(ctk.CTk):
             font=("Roboto", 24, "bold"), 
             fg_color="#f9f9fa"
         )
-        self.senha_asterisk.place(relx=0.68, rely=0.44)
+        self.senha_asterisk.place(relx=0.72, rely=0.54)
 
-        # Frame do CAPTCHA - Versão melhorada
         captcha_main_frame = ctk.CTkFrame(
             login_frame,
             fg_color="#f0f8ff",
             border_width=2,
-            border_color="#929292",
+            border_color="#A3A3A3",
             corner_radius=8
         )
         captcha_main_frame.pack(pady=(15, 5), fill="x", padx=130)
@@ -379,10 +375,9 @@ class TelaLogin(ctk.CTk):
         captcha_inner_frame = ctk.CTkFrame(captcha_main_frame, fg_color="transparent")
         captcha_inner_frame.pack(padx=10, pady=8)
 
-        # Checkbox do CAPTCHA (modificada)
         self.captcha_checkbox = ctk.CTkCheckBox(
             captcha_inner_frame,
-            text="Não sou um robô",  # Texto alterado
+            text="Não sou um robô",  
             variable=self.captcha_var,
             width=58,  
             height=58,  
@@ -394,11 +389,11 @@ class TelaLogin(ctk.CTk):
         self.captcha_checkbox.pack(side="left", padx=(0, 10))
 
         icon_frame = ctk.CTkFrame(captcha_inner_frame, fg_color="transparent")
-        icon_frame.pack(side="left", padx=(10, 0))
+        icon_frame.pack(side="left", padx=(10, 0), pady=8)
 
         try:
             captcha_img = Image.open("icones//captcha.png").resize((30, 30), Image.LANCZOS)
-            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(30, 30))
+            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(35, 35))
             ctk.CTkLabel(icon_frame, image=self.captcha_icon, text="").pack()
         except:
             ctk.CTkLabel(icon_frame).pack()
@@ -419,7 +414,7 @@ class TelaLogin(ctk.CTk):
         self.msg_label.pack(pady=(10,0))
 
         btn_frame = ctk.CTkFrame(login_frame, fg_color="transparent")
-        btn_frame.pack(pady=(8,0))
+        btn_frame.pack(pady=(0,0))
         ctk.CTkButton(
             btn_frame,
             text="Entrar", 
@@ -448,9 +443,10 @@ class TelaLogin(ctk.CTk):
             border_width=2,
             border_color="#045975"
         ).pack(side="left")
+        
 
         esqueceu_frame = ctk.CTkFrame(login_frame, fg_color="transparent")
-        esqueceu_frame.pack(pady=(22, 0))
+        esqueceu_frame.pack(pady=(15, 10))
         ctk.CTkLabel(
             esqueceu_frame,
             text="Esqueceu a senha?",
@@ -858,7 +854,7 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
                 ("Cidade", "cidade"),
                 ("Estado", "estado")
             ]
-        else:  # cliente
+        else: 
             campos += [
                 ("CPF*", "cpf"),
                 ("Data de Nascimento (dd/mm/aaaa)*", "data_nasc"),
@@ -934,7 +930,7 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
             if not dados.get("cnpj") or dados.get("cnpj") == "N/A": erros.append("CNPJ")
             if not dados.get("tipo_fornecimento") or dados.get("tipo_fornecimento") == "N/A": erros.append("Tipo de Fornecimento")
             if not dados.get("cep") or dados.get("cep") == "N/A": erros.append("CEP")
-        else:  # cliente
+        else: 
             if not dados.get("cpf") or dados.get("cpf") == "N/A": erros.append("CPF")
             if not dados.get("cep") or dados.get("cep") == "N/A": erros.append("CEP")
         
