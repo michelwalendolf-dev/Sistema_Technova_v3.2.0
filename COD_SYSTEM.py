@@ -12,6 +12,7 @@ import pandas as pd
 import math
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+import time
 
 ARQUIVO_USUARIOS = "usuarios.json"
 ARQUIVO_PESSOAS = {
@@ -150,7 +151,7 @@ class TelaLogin(ctk.CTk):
             fg_color="#2ecc71", 
             hover_color="Transparent",
             text="Não sou um robô", 
-            font=("Roboto", 16),  
+            font=("Roboto", 18),  
             width=28,  
             height=28,
             state="disabled",
@@ -358,7 +359,7 @@ class TelaLogin(ctk.CTk):
             font=("Roboto", 24, "bold"), 
             fg_color="#f9f9fa"
         )
-        self.usuario_asterisk.place(relx=0.72, rely=0.40)
+        self.usuario_asterisk.place(relx=0.72, rely=0.39)
 
         senha_label = ctk.CTkLabel(
             login_frame, 
@@ -385,7 +386,7 @@ class TelaLogin(ctk.CTk):
             font=("Roboto", 24, "bold"), 
             fg_color="#f9f9fa"
         )
-        self.senha_asterisk.place(relx=0.72, rely=0.54)
+        self.senha_asterisk.place(relx=0.72, rely=0.52)
 
         captcha_main_frame = ctk.CTkFrame(
             login_frame,
@@ -408,7 +409,7 @@ class TelaLogin(ctk.CTk):
             corner_radius=5,  
             border_width=2,
             command=self.verificar_captcha,
-            font=("Roboto", 16)  
+            font=("Roboto", 18)  
         )
         self.captcha_checkbox.pack(side="left", padx=(0, 10))
 
@@ -1449,130 +1450,329 @@ class TelaPrincipal(ctk.CTkToplevel):
         self.configure(fg_color="#f0f0f0")
         self.user = user
         
-        self.top_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.top_frame.pack(fill="x", padx=20, pady=10)
+        # Configurar grid principal
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         
-        ctk.CTkButton(
-            self.top_frame, 
-            text="❌Sair", 
-            command=self.sair,
-            fg_color="#e74c3c", 
-            hover_color="#c0392b", 
-            text_color="#fff",
-            font=("Roboto", 15, "bold"), 
-            corner_radius=8, 
-            width=55, 
-            height=30,
-            border_width=2,
-            border_color="#c0392b"
-        ).pack(side="right", padx=(5, 0))
+        # Criar cabeçalho
+        self.criar_header()
         
-        ctk.CTkButton(
-            self.top_frame, 
-            text="❓Ajuda", 
-            command=self.abrir_ajuda,
-            fg_color="#ebb000", 
-            hover_color="#f1ba13", 
-            text_color="#fff",
-            font=("Roboto", 15, "bold"), 
-            corner_radius=8, 
-            border_color="#d19d01",
-            border_width=2,
-            width=70, 
-            height=30
-        ).pack(side="right", padx=(5, 0))
+        # Criar barra divisória
+        self.criar_divisoria()
+        
+        # Criar área principal
+        self.criar_body()
+        
+        # Configurar relógio
+        self.atualizar_relogio()
+        
+        # Atualizar lista de pessoas
+        self.atualizar_lista()
 
-        ctk.CTkButton(
-            self.top_frame, 
+    def criar_header(self):
+        # Frame do cabeçalho
+        header_frame = ctk.CTkFrame(self, height=110, fg_color="#f2f2f2")
+        header_frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+        header_frame.grid_propagate(False)
+        header_frame.grid_rowconfigure(0, weight=1)
+        header_frame.grid_columnconfigure(0, weight=0)
+        header_frame.grid_columnconfigure(1, weight=0)
+        header_frame.grid_columnconfigure(2, weight=1)
+        header_frame.grid_columnconfigure(3, weight=0)
+        header_frame.grid_columnconfigure(4, weight=1)
+        header_frame.grid_columnconfigure(5, weight=0)
+
+        # Logo
+        logo_frame = ctk.CTkFrame(header_frame, width=100, height=100, fg_color="#f2f2f2")
+        logo_frame.grid(row=0, column=0, padx=(15, 5), sticky="w", pady=5)
+        logo_frame.grid_propagate(False)
+
+        try:
+            logo_img = Image.open("logo.png").resize((90, 90), Image.LANCZOS)
+            ctk_logo_imagem = ctk.CTkImage(light_image=logo_img, size=(90, 90))
+            logo_label = ctk.CTkLabel(logo_frame, image=ctk_logo_imagem, text="")
+            logo_label.pack(expand=True, fill="both")
+        except:
+            ctk.CTkLabel(logo_frame, text="Logo", font=("Roboto", 10), text_color="black").pack(expand=True)
+
+        # Informações do usuário
+        user_frame = ctk.CTkFrame(header_frame, fg_color="#f2f2f2")
+        user_frame.grid(row=0, column=1, sticky="w", padx=(0, 15), pady=15)
+
+        user_label = ctk.CTkLabel(
+            user_frame,
+            text=f"Usuário: {self.user['nome']}",
+            font=("Roboto", 14, "bold"),
+            text_color="black"
+        )
+        user_label.pack(side="left", padx=(0, 5))
+
+        dept_label = ctk.CTkLabel(
+            user_frame,
+            text=f"Depto: {self.user.get('departamento', 'N/A')}",
+            font=("Roboto", 12),
+            text_color="#555"
+        )
+        dept_label.pack(side="left", padx=(5, 0))
+
+        # Relógio
+        clock_frame = ctk.CTkFrame(
+            header_frame, 
+            fg_color="black", 
+            border_color="#a0a0a0", 
+            border_width=4, 
+            corner_radius=10,
+            width=220, 
+            height=90
+        )
+        clock_frame.grid(row=0, column=3, sticky="", pady=15)
+        clock_frame.grid_propagate(False)
+        clock_frame.grid_rowconfigure(0, weight=3)
+        clock_frame.grid_rowconfigure(1, weight=1)
+        clock_frame.grid_columnconfigure(0, weight=1)
+
+        self.time_label = ctk.CTkLabel(
+            clock_frame,
+            text="00:00:00",
+            text_color="white",
+            font=("digital-7", 40)
+        )
+        self.time_label.grid(row=0, column=0, sticky="nsew", padx=10, pady=(5, 0))
+
+        self.date_label = ctk.CTkLabel(
+            clock_frame,
+            text="00/00/0000",
+            text_color="white",
+            font=("Roboto", 14, "bold")
+        )
+        self.date_label.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 5))
+
+        # Botões do cabeçalho
+        right_frame = ctk.CTkFrame(header_frame, fg_color="#f2f2f2")
+        right_frame.grid(row=0, column=4, sticky="e", padx=15, pady=15)
+
+        buttons_frame = ctk.CTkFrame(right_frame, fg_color="#f2f2f2")
+        buttons_frame.pack(side="top", anchor="e")
+
+        btn_sobre = ctk.CTkButton(
+            buttons_frame, 
             text="💡Sobre", 
-            command=self.abrir_sobre,
+            width=60,
+            height=30,
             fg_color="#4f8cff", 
             hover_color="#357ae8", 
             text_color="#fff",
-            font=("Roboto", 15, "bold"), 
+            font=("Segoe UI Emoji", 15, "bold"), 
             corner_radius=8, 
-            border_color="#4f8cff",
+            border_color="#357ae8",
             border_width=2,
-            width=70, 
-            height=30
-        ).pack(side="right", padx=(5, 0))
-
-        self.frame_principal = ctk.CTkFrame(self, fg_color="transparent")
-        self.frame_principal.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-
-        self.layout_principal()
-        self.frame_info_usuario()
-        self.atualizar_lista()
-        
-        self.bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.bottom_frame.pack(fill="x", padx=20, pady=10)
-        
-        self.left_button_container = ctk.CTkFrame(self.bottom_frame, fg_color="transparent")
-        self.left_button_container.pack(side="left", padx=10)
-        
-        btn_agenda = ctk.CTkButton(
-            self.left_button_container, 
-            text="Agenda", 
-            command=lambda: None,
-            state="disabled",
-            fg_color="#9b59b6",
-            hover_color="#8e44ad",
-            text_color="#fff",
-            font=("Roboto", 20, "bold"), 
-            corner_radius=12, 
-            height=40, 
-            width=110,
-            border_width=2,
-            border_color="#8e44ad"
+            command=self.abrir_sobre
         )
-        btn_agenda.pack(side="left")
-        
-        self.center_button_container = ctk.CTkFrame(self.bottom_frame, fg_color="transparent")
-        self.center_button_container.pack(side="left", expand=True)
-        
-        botoes_centrais = [
-            ("Pesquisar", "#047194", self.abrir_pesquisar),
-            ("Excluir", "#e74c3c", self.abrir_excluir),
-            ("Editar", "#047194", self.abrir_editar)
-        ]
-       
-        for texto, cor, comando in botoes_centrais:
-            hover_cor = "#f66859" if texto == "Excluir" else "#008ab6"
-            bordder_cor = "#045975" if texto != "Excluir" else "#b53d30"
-            btn = ctk.CTkButton(
-                self.center_button_container, 
-                text=texto, 
-                command=comando,
-            fg_color=cor, 
-                hover_color=hover_cor,
-                text_color="#fff",
-                font=("Roboto", 20, "bold"), 
-                corner_radius=12, 
-                height=40, 
-                width=110,
-                border_width=2,
-                border_color=bordder_cor
-            )
-            btn.pack(side="left", padx=5)
+        btn_sobre.pack(side="left", padx=2)
 
-        self.right_button_container = ctk.CTkFrame(self.bottom_frame, fg_color="transparent")
-        self.right_button_container.pack(side="right", padx=10)
-        
+        btn_ajuda = ctk.CTkButton(
+            buttons_frame, 
+            text="❓Ajuda", 
+            width=50,
+            height=30,
+            fg_color="#ebb000", 
+            hover_color="#f1ba13", 
+            text_color="#fff",
+            font=("Segoe UI Emoji", 15, "bold"), 
+            corner_radius=8, 
+            border_color="#d19d01",
+            border_width=2,
+            command=self.abrir_ajuda
+        )
+        btn_ajuda.pack(side="left", padx=2)
+
+        btn_sair = ctk.CTkButton(
+            buttons_frame, 
+            text="❌Sair", 
+            command=self.sair,
+            width=48,
+            height=30, 
+            fg_color="#e74c3c", 
+            hover_color="#c0392b", 
+            text_color="#fff",
+            font=("Segoe UI Emoji", 15, "bold"), 
+            corner_radius=8, 
+            border_width=2,
+            border_color="#c0392b"
+        )
+        btn_sair.pack(side="left", padx=2)
+
+    def criar_divisoria(self):
+        frame_divisoria = ctk.CTkFrame(
+            self, 
+            height=16,
+            fg_color="#b6b4b4",
+            corner_radius=0
+        )
+        frame_divisoria.grid(row=1, column=0, sticky="ew", padx=0, pady=0)
+        frame_divisoria.grid_propagate(False)
+
+        frame_degrade = ctk.CTkFrame(
+            frame_divisoria, 
+            fg_color="#b6b4b4", 
+            height=16,
+            corner_radius=0,
+        )
+        frame_degrade.pack(fill="x", side="top", pady=0.003)
+
+        ctk.CTkFrame(
+            frame_degrade,
+            height=8,
+            fg_color="#c5c4c4",
+            corner_radius=0,
+        ).pack(fill="x", side="top", pady=0)
+
+        ctk.CTkFrame(
+            frame_degrade,
+            height=3,
+            fg_color="#b6b4b4",
+            corner_radius=0,
+            border_width=3,
+            border_color="#b6b4b4"
+        ).pack(fill="x", side="top", pady=0)
+
+        ctk.CTkFrame(
+            frame_degrade,
+            height=8,
+            fg_color="#A2A2A2",
+            corner_radius=0
+        ).pack(fill="x", side="top", pady=0.003)
+
+    def criar_body(self):
+        body_frame = ctk.CTkFrame(self, fg_color="#b7b7b7")
+        body_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        body_frame.grid_rowconfigure(0, weight=1)
+        body_frame.grid_columnconfigure(0, weight=1, uniform="body_cols")
+        body_frame.grid_columnconfigure(1, weight=4, uniform="body_cols")
+
+        # Sidebar
+        sidebar_frame = ctk.CTkFrame(body_frame, fg_color="#f9f9f9")
+        sidebar_frame.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+        sidebar_frame.grid_rowconfigure(0, weight=1)
+        sidebar_frame.grid_columnconfigure(0, weight=1)
+
+        menu_container = ctk.CTkFrame(sidebar_frame, fg_color="#f9f9f9", border_color="#c0c0c0", border_width=3, corner_radius=0)
+        menu_container.pack(fill="both", expand=True, padx=0, pady=0)
+
+        # Menu de opções
+        menu_items = [
+            "👥 Pessoas",
+            "⬇️ Importações",
+            "⚙️ Configurações",
+        ]
+
+        for item in menu_items:
+            menu_btn = ctk.CTkButton(
+                menu_container,
+                text=item,
+                height=40,
+                fg_color="#f9f9f9",
+                hover_color="#e0e0e0",
+                text_color="black",
+                font=("Segoe UI Emoji", 16),
+                anchor="w",
+                command=lambda i=item: self.menu_selecionado(i)
+            )
+            menu_btn.pack(fill="x", pady=5, padx=10)
+
+        # Área de conteúdo
+        content_frame = ctk.CTkFrame(body_frame, fg_color="#ffffff", border_color="#c0c0c0", border_width=3)
+        content_frame.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
+        content_frame.grid_rowconfigure(0, weight=1)
+        content_frame.grid_columnconfigure(0, weight=1)
+
+        # Frame para as listas de pessoas
+        self.listas_frame = ctk.CTkFrame(content_frame, fg_color="white")
+        self.listas_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.listas_frame.grid_rowconfigure(0, weight=1)
+        self.listas_frame.grid_columnconfigure(0, weight=1)
+        self.listas_frame.grid_columnconfigure(1, weight=1)
+        self.listas_frame.grid_columnconfigure(2, weight=1)
+
+        # Botões de ação
+        botoes_frame = ctk.CTkFrame(content_frame, fg_color="white", height=50)
+        botoes_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
+        botoes_frame.grid_propagate(False)
+        botoes_frame.grid_columnconfigure(0, weight=1)
+        botoes_frame.grid_columnconfigure(1, weight=1)
+        botoes_frame.grid_columnconfigure(2, weight=1)
+        botoes_frame.grid_columnconfigure(3, weight=1)
+
+        botoes_acoes = [
+            ("Cadastrar", "#4CAF50", self.abrir_cadastro_menu),
+            ("Pesquisar", "#047194", self.abrir_pesquisar),
+            ("Editar", "#047194", self.abrir_editar),
+            ("Excluir", "#e74c3c", self.abrir_excluir)
+        ]
+
+        for i, (texto, cor, comando) in enumerate(botoes_acoes):
+            btn = ctk.CTkButton(
+                botoes_frame,
+                text=texto,
+                command=comando,
+                fg_color=cor,
+                hover_color="#008ab6" if texto != "Excluir" else "#c0392b",
+                text_color="#fff",
+                font=("Roboto", 14, "bold"),
+                height=35
+            )
+            btn.grid(row=0, column=i, padx=5, pady=5)
+
+        # Botões adicionais
+        botoes_adicionais_frame = ctk.CTkFrame(content_frame, fg_color="white", height=40)
+        botoes_adicionais_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
+        botoes_adicionais_frame.grid_propagate(False)
+        botoes_adicionais_frame.grid_columnconfigure(0, weight=1)
+        botoes_adicionais_frame.grid_columnconfigure(1, weight=1)
+
         btn_importar = ctk.CTkButton(
-            self.right_button_container, 
-            text="Importar", 
+            botoes_adicionais_frame,
+            text="Importar",
             command=self.abrir_importar,
             fg_color="#2ecc71",
             hover_color="#27ae60",
             text_color="#fff",
-            font=("Roboto", 20, "bold"), 
-            corner_radius=12, 
-            height=40, 
-            width=110,
-            border_width=2,
-            border_color="#27ae60"
+            font=("Roboto", 14, "bold"),
+            height=30
         )
-        btn_importar.pack(side="right")
+        btn_importar.grid(row=0, column=0, padx=5, pady=5)
+
+        btn_exportar = ctk.CTkButton(
+            botoes_adicionais_frame,
+            text="Exportar",
+            command=self.abrir_exportar,
+            fg_color="#9b59b6",
+            hover_color="#8e44ad",
+            text_color="#fff",
+            font=("Roboto", 14, "bold"),
+            height=30
+        )
+        btn_exportar.grid(row=0, column=1, padx=5, pady=5)
+
+    def menu_selecionado(self, opcao):
+        # Implementar ações para cada opção do menu
+        if opcao == "👥 Pessoas":
+            self.atualizar_lista()
+        elif opcao == "📊 Relatórios":
+            messagebox.showinfo("Relatórios", "Funcionalidade de relatórios em desenvolvimento")
+        elif opcao == "⚙️ Configurações":
+            self.alterar_informacoes_usuario()
+        elif opcao == "📖 Ajuda":
+            self.abrir_ajuda()
+
+    def atualizar_relogio(self):
+        now = time.localtime()
+        date_str = time.strftime("%d/%m/%Y", now)
+        time_str = time.strftime("%H:%M:%S", now)
+
+        self.date_label.configure(text=date_str)
+        self.time_label.configure(text=time_str)
+        self.after(1000, self.atualizar_relogio)
 
     def sair(self):
         self.destroy()
@@ -1586,7 +1786,7 @@ class TelaPrincipal(ctk.CTkToplevel):
                 messagebox.showwarning("Aviso", "Arquivo de ajuda não encontrado!")
         except Exception as e:
             messagebox.showerror("Erro", f"Não foi possível abrir o guia:\n{str(e)}")
-    
+
     def abrir_sobre(self):
         try:
             if os.path.exists("COD_ON.py"):
@@ -1595,7 +1795,7 @@ class TelaPrincipal(ctk.CTkToplevel):
                 messagebox.showwarning("Aviso", "Arquivo de sobre não encontrado!")
         except Exception as e:
             messagebox.showerror("Erro", f"Não foi possível abrir a tela sobre:\n{str(e)}")
-    
+
     def abrir_pesquisar(self):
         win = TelaBuscaPessoa(self, "pesquisar")
         win.grab_set()
@@ -1616,190 +1816,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         win = TelaExportar(self)
         win.grab_set()
     
-    def layout_principal(self):
-        self.frame_user = ctk.CTkFrame(
-            self.frame_principal, 
-            fg_color="#ffffff", 
-            corner_radius=18, 
-            border_width=2, 
-            border_color="#D5D5D5"
-        )
-        self.frame_user.pack(fill="x", pady=(0, 20))
-
-        self.frame_user.grid_columnconfigure(0, weight=0)
-        self.frame_user.grid_columnconfigure(1, weight=1)
-        self.frame_user.grid_columnconfigure(2, weight=0)
-        self.frame_user.grid_columnconfigure(3, weight=0)
-        self.frame_user.grid_rowconfigure(0, weight=1)
-
-        logo_path = "logotipo.png"
-        if os.path.exists(logo_path):
-            logo_img = Image.open(logo_path)
-            logo_img = logo_img.resize((200, 200), Image.LANCZOS)
-            self.logo_tk = ctk.CTkImage(
-                light_image=logo_img, 
-                dark_image=logo_img, 
-                size=(200,200)
-            )
-            ctk.CTkLabel(
-                self.frame_user, 
-                image=self.logo_tk, 
-                text=""
-            ).grid(row=0, column=3, padx=20, pady=10, sticky="ne")
-        else:
-            ctk.CTkLabel(
-                self.frame_user, 
-                text="Logo não encontrada", 
-                font=("Roboto", 10), 
-                text_color="red"
-            ).grid(row=0, column=3, padx=20, pady=10, sticky="ne")
-
-        self.mais_opcoes_var = ctk.StringVar(value="Mais Opções")
-        mais_opcoes = ctk.CTkOptionMenu(
-            self.frame_user,
-            variable=self.mais_opcoes_var,
-            values=["Cadastrar", "Exportar"],
-            command=self.mais_opcoes_handler,
-            width=180,
-            height=40,
-            corner_radius=12,
-            font=("Roboto", 20, "bold"),
-            fg_color="#047194",
-            button_color="#008ab6",
-            button_hover_color="#045975",
-            dropdown_fg_color="#f7f7fb",
-            dropdown_hover_color="#e0f7fa",
-            dropdown_text_color="#047194",
-            text_color="#ffffff"
-        )
-        mais_opcoes.grid(row=0, column=3, padx=60, pady=20, sticky="se")
-
-        self.main_list_frame = ctk.CTkFrame(self.frame_principal, fg_color="transparent")
-        self.main_list_frame.pack(fill="both", expand=True)
-        self.main_list_frame.grid_columnconfigure(0, weight=1)
-        self.main_list_frame.grid_columnconfigure(1, weight=1)
-        self.main_list_frame.grid_columnconfigure(2, weight=1)
-        self.main_list_frame.grid_rowconfigure(0, weight=1)
-
-        self.frames_pessoas = {}
-        tipos = ["cliente", "funcionario", "fornecedor"]
-        for i, tipo in enumerate(tipos):
-            frame_tipo = ctk.CTkFrame(
-                self.main_list_frame, 
-                fg_color="#ffffff", 
-                corner_radius=12, 
-                border_width=1, 
-                border_color="#E0E0E0"
-            )
-            frame_tipo.grid(row=0, column=i, padx=10, pady=10, sticky="nsew")
-
-            ctk.CTkLabel(
-                frame_tipo, 
-                text=tipo.capitalize(), 
-                font=("Roboto", 20, "bold"), 
-                text_color="#047194"
-            ).pack(pady=(10,5))
-
-            scroll_frame = ctk.CTkScrollableFrame(
-                frame_tipo, 
-                fg_color="#f7f7fb"
-            )
-            scroll_frame.pack(fill="both", expand=True, padx=5, pady=5)
-            
-            self.frames_pessoas[tipo] = scroll_frame
-
-    def mais_opcoes_handler(self, choice):
-        if choice == "Cadastrar":
-            self.abrir_cadastro_menu()
-        elif choice == "Exportar":
-            self.abrir_exportar()
-
-    def frame_info_usuario(self):
-        for widget in self.frame_user.grid_slaves():
-            info = widget.grid_info()
-            if info["column"] in [0, 1]:
-                widget.destroy()
-
-        frame_foto_moldura = ctk.CTkFrame(
-            self.frame_user, 
-            width=270, 
-            height=270,
-            corner_radius=20, 
-            fg_color="#008ab6", 
-            border_width=4, 
-            border_color="#047194"
-        )
-        frame_foto_moldura.grid(row=0, column=0, padx=20, pady=20, sticky="n")
-        frame_foto_moldura.pack_propagate(False)
-
-        try:
-            img = Image.open(self.user["foto"])
-            img = img.resize((250, 250), Image.LANCZOS)
-            self.foto = ctk.CTkImage(
-                light_image=img, 
-                dark_image=img, 
-                size=(250,250)
-            )
-            ctk.CTkLabel(
-                frame_foto_moldura, 
-                image=self.foto, 
-                text="", 
-                fg_color="transparent"
-            ).pack(expand=True)
-        except Exception as e:
-            ctk.CTkLabel(
-                frame_foto_moldura, 
-                text="Foto não encontrada", 
-                font=("Roboto", 16), 
-                text_color="red", 
-                fg_color="transparent"
-            ).pack(expand=True)
-
-        info_frame = ctk.CTkFrame(self.frame_user, fg_color="transparent")
-        info_frame.grid(row=0, column=1, sticky="nw", padx=(30,0), pady=(20,0))
-        info_frame.grid_columnconfigure(0, weight=1)
-        
-        ctk.CTkLabel(
-            info_frame, 
-            text=f"Nome: {tratar_valor_vazio(self.user['nome'])}", 
-            font=("Roboto", 30, "bold"), 
-            text_color="#3a3a3a"
-        ).grid(row=0, column=0, sticky="w", pady=(0,10))
-        ctk.CTkLabel(
-            info_frame, 
-            text=f"Departamento: {tratar_valor_vazio(self.user.get('departamento', 'N/A'))}", 
-            font=("Roboto", 22), 
-            text_color="#555"
-        ).grid(row=1, column=0, sticky="w", pady=(0,10))
-        ctk.CTkLabel(
-            info_frame, 
-            text=f"Setor: {tratar_valor_vazio(self.user['setor'])}", 
-            font=("Roboto", 22), 
-            text_color="#555"
-        ).grid(row=2, column=0, sticky="w", pady=(0,10))
-        ctk.CTkLabel(
-            info_frame, 
-            text=f"Filtro: {tratar_valor_vazio(self.user.get('filtro', 'Padrão'))}", 
-            font=("Roboto", 22), 
-            text_color="#555"
-        ).grid(row=3, column=0, sticky="w", pady=(0,20))
-
-        self.alterar_info_btn = ctk.CTkButton(
-            self.frame_user, 
-            text="Informações Pessoais", 
-            command=self.alterar_informacoes_usuario,
-            fg_color="#047194", 
-            hover_color="#008ab6", 
-            text_color="#fff",
-            font=("Roboto", 15, "bold"), 
-            corner_radius=12, 
-            height=44, 
-            width=180,
-            border_width=2,
-            border_color="#045975"
-        )
-        self.alterar_info_btn.grid(row=0, column=1, sticky="sw", pady=(10, 20), padx=(30,30))
-
     def abrir_cadastro_menu(self):
         win = TelaCadastroPessoa(self)
         win.grab_set()
@@ -1817,82 +1833,94 @@ class TelaPrincipal(ctk.CTkToplevel):
         dados_corretos_usuario = next((u for u in users if u["usuario"] == self.user["usuario"]), None)
         if dados_corretos_usuario:
             self.user = dados_corretos_usuario
-            self.frame_info_usuario()
+            # Recriar o header para atualizar as informações
+            for widget in self.grid_slaves():
+                if widget.grid_info()["row"] == 0:
+                    widget.destroy()
+            self.criar_header()
         else:
             messagebox.showerror("Erro", "Usuário atual não encontrado após alteração. Por favor, faça login novamente.")
             self.master.deiconify()
             self.destroy()
 
     def atualizar_lista(self):
-        for tipo in self.frames_pessoas:
-            for widget in self.frames_pessoas[tipo].winfo_children():
-                widget.destroy()
+        # Limpar frames existentes
+        for widget in self.listas_frame.winfo_children():
+            widget.destroy()
 
-        for tipo in ["cliente", "funcionario", "fornecedor"]:
+        # Criar frames para cada tipo de pessoa
+        tipos = ["cliente", "funcionario", "fornecedor"]
+        titulos = ["Clientes", "Funcionários", "Fornecedores"]
+        cores = ["#E8F5E9", "#E3F2FD", "#FFF3E0"]
+
+        for i, (tipo, titulo, cor) in enumerate(zip(tipos, titulos, cores)):
+            frame_tipo = ctk.CTkFrame(
+                self.listas_frame, 
+                fg_color=cor,
+                corner_radius=10
+            )
+            frame_tipo.grid(row=0, column=i, sticky="nsew", padx=5, pady=5)
+            frame_tipo.grid_rowconfigure(1, weight=1)
+            frame_tipo.grid_columnconfigure(0, weight=1)
+
+            # Título
+            ctk.CTkLabel(
+                frame_tipo,
+                text=titulo,
+                font=("Roboto", 16, "bold"),
+                text_color="#2C3E50"
+            ).grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+
+            # Lista scrollável
+            scroll_frame = ctk.CTkScrollableFrame(
+                frame_tipo,
+                fg_color="white"
+            )
+            scroll_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+
+            # Carregar dados
             arquivo = ARQUIVO_PESSOAS[tipo]
             pessoas = carregar_dados_banco(arquivo)
-        
-            if not pessoas:
-                container = ctk.CTkFrame(
-                    self.frames_pessoas[tipo], 
-                    fg_color="transparent"
-                )
-                container.pack(fill="both", expand=True)
-                
-                ctk.CTkLabel(
-                    container, 
-                    text="Nenhum registro encontrado.", 
-                    font=("Roboto", 12), 
-                    text_color="#777",
-                ).pack(expand=True, pady=20)
-            else:
-                for p in pessoas[:50]:
-                    person_card = ctk.CTkFrame(
-                        self.frames_pessoas[tipo], 
-                        fg_color="#ffffff", 
-                        corner_radius=8, 
-                        border_width=1, 
-                        border_color="#D0D0D0"
-                    )
-                    person_card.pack(padx=0, pady=5, fill="x", anchor="center")
 
-                    campos = [
-                        f"Nome: {tratar_valor_vazio(p.get('nome'))}",
-                        f"Tipo: {tipo.capitalize()}"
-                    ]
-                
+            if not pessoas:
+                ctk.CTkLabel(
+                    scroll_frame,
+                    text="Nenhum registro encontrado",
+                    font=("Roboto", 12),
+                    text_color="#7F8C8D"
+                ).pack(pady=20)
+            else:
+                for p in pessoas[:20]:  # Limitar a 20 registros por performance
+                    person_card = ctk.CTkFrame(
+                        scroll_frame,
+                        fg_color="#F8F9FA",
+                        corner_radius=5,
+                        border_width=1,
+                        border_color="#E9ECEF"
+                    )
+                    person_card.pack(fill="x", pady=2, padx=5)
+
+                    campos = [f"Nome: {tratar_valor_vazio(p.get('nome'))}"]
                     if 'cpf' in p: campos.append(f"CPF: {tratar_valor_vazio(p.get('cpf'))}")
                     if 'cnpj' in p: campos.append(f"CNPJ: {tratar_valor_vazio(p.get('cnpj'))}")
-                    if 'data_nasc' in p: campos.append(f"Nascimento: {tratar_valor_vazio(p.get('data_nasc'))}")
-                    if 'idade' in p: campos.append(f"Idade: {tratar_valor_vazio(p.get('idade'))}")
-                    if 'departamento' in p: campos.append(f"Departamento: {tratar_valor_vazio(p.get('departamento'))}")
-                    if 'setor' in p: campos.append(f"Setor: {tratar_valor_vazio(p.get('setor'))}")
-                    if 'data_admissao' in p: campos.append(f"Admissão: {tratar_valor_vazio(p.get('data_admissao'))}")
-                    if 'tipo_fornecimento' in p: campos.append(f"Fornecimento: {tratar_valor_vazio(p.get('tipo_fornecimento'))}")
                     if 'email' in p: campos.append(f"Email: {tratar_valor_vazio(p.get('email'))}")
-                    if 'cep' in p: campos.append(f"CEP: {tratar_valor_vazio(p.get('cep'))}")
-                    if 'endereco' in p: campos.append(f"Endereço: {tratar_valor_vazio(p.get('endereco'))}")
-                    if 'numero' in p: campos.append(f"Número: {tratar_valor_vazio(p.get('numero'))}")
-                    if 'bairro' in p: campos.append(f"Bairro: {tratar_valor_vazio(p.get('bairro'))}")
-                    if 'cidade' in p: campos.append(f"Cidade: {tratar_valor_vazio(p.get('cidade'))}")
-                    if 'estado' in p: campos.append(f"Estado: {tratar_valor_vazio(p.get('estado'))}")
 
                     for campo in campos:
                         ctk.CTkLabel(
-                            person_card, 
-                            text=campo, 
-                            font=("Roboto", 11), 
-                            text_color="#555",
+                            person_card,
+                            text=campo,
+                            font=("Roboto", 10),
+                            text_color="#2C3E50",
                             anchor="w",
                             justify="left"
-                        ).pack(anchor="w", padx=5, fill="x")
-                
-                if len(pessoas) > 50:
+                        ).pack(anchor="w", padx=5, pady=2)
+
+                if len(pessoas) > 20:
                     ctk.CTkLabel(
-                        self.frames_pessoas[tipo],  
-                        text=f"... e mais {len(pessoas) - 50} registros", 
-                        font=("Roboto", 10), 
-                        text_color="#666"
+                        scroll_frame,
+                        text=f"... e mais {len(pessoas) - 20} registros",
+                        font=("Roboto", 10),
+                        text_color="#7F8C8D"
                     ).pack(pady=5)
 
 if __name__ == "__main__":
