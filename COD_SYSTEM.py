@@ -150,7 +150,7 @@ class TelaLogin(ctk.CTk):
             fg_color="#2ecc71", 
             hover_color="Transparent",
             text="Não sou um robô", 
-            font=("Roboto", 20),  
+            font=("Roboto", 16),  
             width=28,  
             height=28,
             state="disabled",
@@ -160,22 +160,46 @@ class TelaLogin(ctk.CTk):
     def _login(self):
         usuario = self.usuario_var.get()
         senha = self.senha_var.get()
-        users = carregar_dados_banco(ARQUIVO_USUARIOS)
-        user = next((u for u in users if u["usuario"] == usuario), None)
         
+        # Reset dos indicadores de erro
         self.erros = {}
         self.usuario_asterisk.configure(text="")
         self.senha_asterisk.configure(text="")
         self.usuario_entry.configure(border_color="#ccc")
         self.senha_entry.configure(border_color="#ccc")
         
+        # Verificar campos vazios e CAPTCHA
+        campos_vazios = []
+        if not usuario.strip():
+            campos_vazios.append("usuário")
+            self.usuario_entry.configure(border_color="#ffcccc")
+            self.usuario_asterisk.configure(text="×")
+        if not senha.strip():
+            campos_vazios.append("senha")
+            self.senha_entry.configure(border_color="#ffcccc")
+            self.senha_asterisk.configure(text="×")
+        
+        # Verificar CAPTCHA
         if not self.captcha_verified:
-            self.msg_label.configure(text="Complete o CAPTCHA para continuar", text_color="#e74c3c")
+            if campos_vazios:
+                mensagem_erro = "Preencha os campos de " + ", ".join(campos_vazios) + " e complete o CAPTCHA"
+            else:
+                mensagem_erro = "Complete o CAPTCHA para continuar"
+            self.msg_label.configure(text=mensagem_erro, text_color="#e74c3c")
             self.captcha_error = True
             return
+            
+        # Se chegou aqui, o CAPTCHA está verificado mas pode ter campos vazios
+        if campos_vazios:
+            mensagem_erro = "Preencha os campos de " + ", ".join(campos_vazios)
+            self.msg_label.configure(text=mensagem_erro, text_color="#e74c3c")
+            return
+
+        users = carregar_dados_banco(ARQUIVO_USUARIOS)
+        user = next((u for u in users if u["usuario"] == usuario), None)
         
         if not user and not any(u["senha"] == senha for u in users):
-            self.msg_label.configure(text="Usuário, senha e CAPTCHA incorretos" if self.captcha_error else "Usuário e senha incorretos", text_color="#e74c3c")
+            self.msg_label.configure(text="Usuário e senha incorretos", text_color="#e74c3c")
             messagebox.showerror("Erro", "Usuário e senha estão incorretos ou não encontrados. Verifique as informações e tente novamente.")
             self.usuario_entry.configure(border_color="#ffcccc")
             self.senha_entry.configure(border_color="#ffcccc")
@@ -184,14 +208,14 @@ class TelaLogin(ctk.CTk):
             return
             
         if not user:
-            self.msg_label.configure(text="Usuário incorreto" + (" e CAPTCHA não verificado" if self.captcha_error else ""), text_color="#e74c3c")
+            self.msg_label.configure(text="Usuário incorreto", text_color="#e74c3c")
             messagebox.showerror("Erro", "Usuário incorreto. Verifique as informações e tente novamente.")
             self.usuario_entry.configure(border_color="#ffcccc")
             self.usuario_asterisk.configure(text="×")
             return
             
         if user["senha"] != senha:
-            self.msg_label.configure(text="Senha incorreta" + (" e CAPTCHA não verificado" if self.captcha_error else ""), text_color="#e74c3c")
+            self.msg_label.configure(text="Senha incorreta", text_color="#e74c3c")
             messagebox.showerror("Erro", "Senha incorreta. Verifique as informações e tente novamente.")
             self.senha_entry.configure(border_color="#ffcccc")
             self.senha_asterisk.configure(text="×")
@@ -384,7 +408,7 @@ class TelaLogin(ctk.CTk):
             corner_radius=5,  
             border_width=2,
             command=self.verificar_captcha,
-            font=("Roboto", 20)  
+            font=("Roboto", 16)  
         )
         self.captcha_checkbox.pack(side="left", padx=(0, 10))
 
@@ -393,7 +417,7 @@ class TelaLogin(ctk.CTk):
 
         try:
             captcha_img = Image.open("icones//captcha.png").resize((30, 30), Image.LANCZOS)
-            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(35, 35))
+            self.captcha_icon = ctk.CTkImage(light_image=captcha_img, dark_image=captcha_img, size=(30, 30))
             ctk.CTkLabel(icon_frame, image=self.captcha_icon, text="").pack()
         except:
             ctk.CTkLabel(icon_frame).pack()
