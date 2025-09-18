@@ -464,12 +464,32 @@ class App(ctk.CTk):
         frame_produtos = ctk.CTkFrame(self.area_conteudo, fg_color="white")
         frame_produtos.pack(fill="both", expand=True, padx=0, pady=0)
 
-        frame_cabecario_produtos = ctk.CTkFrame(frame_produtos, height=50, fg_color="#f0f0f0", corner_radius=0)
-        frame_cabecario_produtos.pack(fill="x", pady=0)
-        frame_cabecario_produtos.pack_propagate(False)
+        # NOTEBOOK PARA AS ABAS (AGORA ESTÁ NO TOPO)
+        self.notebook_produtos = ttk.Notebook(frame_produtos)
+        self.notebook_produtos.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Frame para a aba de Produtos
+        self.frame_aba_produtos = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
+        self.notebook_produtos.add(self.frame_aba_produtos, text="Produtos")
+
+        # Frame para a aba de Séries
+        self.frame_aba_series = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
+        self.notebook_produtos.add(self.frame_aba_series, text="Séries")
+
+        # Aumentar o tamanho das abas
+        style = ttk.Style()
+        style.configure("TNotebook.Tab", padding=[20, 8], font=('Helvetica', 12, 'bold'))
+
+        # Inicialmente desabilitar a aba de séries
+        self.notebook_produtos.tab(1, state="disabled")
+
+        # FRAME DE BOTÕES (AGORA ABAIXO DO NOTEBOOK)
+        frame_botoes = ctk.CTkFrame(frame_produtos, height=50, fg_color="#f0f0f0", corner_radius=0)
+        frame_botoes.pack(fill="x", pady=(0, 10))
+        frame_botoes.pack_propagate(False)
 
         btn_novo = ctk.CTkButton(
-            frame_cabecario_produtos,
+            frame_botoes,
             text="Novo",
             width=80,
             height=30,
@@ -483,7 +503,7 @@ class App(ctk.CTk):
         btn_novo.pack(side="left", padx=(10, 5), pady=10)
 
         btn_editar = ctk.CTkButton(
-            frame_cabecario_produtos,
+            frame_botoes,
             text="Editar",
             width=80,
             height=30,
@@ -497,7 +517,7 @@ class App(ctk.CTk):
         btn_editar.pack(side="left", padx=5, pady=10)
 
         btn_excluir = ctk.CTkButton(
-            frame_cabecario_produtos,
+            frame_botoes,
             text="Excluir",
             width=80,
             height=30,
@@ -511,7 +531,7 @@ class App(ctk.CTk):
         btn_excluir.pack(side="left", padx=5, pady=10)
 
         mais_opcoes = ctk.CTkOptionMenu(
-            frame_cabecario_produtos,
+            frame_botoes,
             values=[
                 "⬆Exportar dados", 
                 "💾Importar dados",
@@ -530,11 +550,11 @@ class App(ctk.CTk):
         mais_opcoes.set("Mais opções")
         mais_opcoes.pack(side="left", padx=5, pady=10)
 
-        espaco_vazio = ctk.CTkFrame(frame_cabecario_produtos, fg_color="transparent")
+        espaco_vazio = ctk.CTkFrame(frame_botoes, fg_color="transparent")
         espaco_vazio.pack(side="left", fill="x", expand=True)
 
         btn_sair = ctk.CTkButton(
-            frame_cabecario_produtos,
+            frame_botoes,
             text="Sair",
             width=80,
             height=30,
@@ -546,21 +566,6 @@ class App(ctk.CTk):
             command=self.fechar_tela_produtos
         )
         btn_sair.pack(side="right", padx=10, pady=10)
-
-        # Notebook para as abas
-        self.notebook_produtos = ttk.Notebook(frame_produtos)
-        self.notebook_produtos.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Frame para a aba de Produtos
-        self.frame_aba_produtos = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
-        self.notebook_produtos.add(self.frame_aba_produtos, text="Produtos")
-
-        # Frame para a aba de Séries
-        self.frame_aba_series = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
-        self.notebook_produtos.add(self.frame_aba_series, text="Séries")
-        
-        # Inicialmente desabilitar a aba de séries
-        self.notebook_produtos.tab(1, state="disabled")
 
         # Construir o conteúdo das abas
         self.construir_aba_produtos()
@@ -769,7 +774,7 @@ class App(ctk.CTk):
                 text_color="black"
             )
             entry.grid(row=0, column=0, sticky="ew", padx=(2, 0), pady=2)
-            self.filtro_series_entries.append(entry)  # Adicionar à lista
+            self.filtro_series_entries.append(entry)  
             
             btn_clear = ctk.CTkButton(
                 campo_frame,
@@ -784,16 +789,21 @@ class App(ctk.CTk):
             )
             btn_clear.grid(row=0, column=1, padx=(2, 2), pady=2)
 
+        # BOTÃO DE PESQUISA IGUAL AO DA ABA DE PRODUTOS
         btn_pesquisar_series = ctk.CTkButton(
             filtros_frame,
-            text="🔍 Pesquisar",
+            text="Pesuisar🔎",
             height=35,
+            width=120,
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=20, weight="bold"),
             fg_color="#4CAF50",
-            hover_color="#45a049",
+            hover_color="#54C057",
+            border_color="#429647",
+            border_width=2,
             text_color="white",
             command=self.pesquisar_series
         )
-        btn_pesquisar_series.pack(fill="x", pady=10)
+        btn_pesquisar_series.pack(pady=10)
 
         lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
@@ -1164,11 +1174,10 @@ class App(ctk.CTk):
 
         menu_items = [
             ("📦 Estoque", [
-                "📦Cadastro e Edição de Produtos",
                 "📦Controle de Estoque",
                 "📦Produtos",
                 "📝Contratos de Empréstimo",
-                "🔧Manutenção Corretiva/Preventiva",
+                "🔧Manutenção",
                 "🧰Ordens de Serviço",
                 "📄Relatórios",
             ]),
@@ -1186,7 +1195,6 @@ class App(ctk.CTk):
             ("👤 Administração", [
                 "👤Usuário",
                 "👥Grupo de Usuários",
-                "📦Controle de Produtos/Estoque",
                 "📄Relatórios"
             ]),
             ("🕒 Auditoria", [
