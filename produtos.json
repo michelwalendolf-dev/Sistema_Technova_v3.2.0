@@ -1,1 +1,22 @@
-[]
+[
+    {
+        "codigo_sequencial": "",
+        "marca": "teste",
+        "valor": "R$ 1000",
+        "peso": "",
+        "altura": "",
+        "largura": "",
+        "tipo": "Eletr\u00f4nico",
+        "codigo": "COD00000001",
+        "nome": "Teste Produto",
+        "grupo": "Grupo A",
+        "local_estoque": "Estoque Principal",
+        "fornecedor": "",
+        "estoque": "12 unidades",
+        "controla_serie": true,
+        "inativo": false,
+        "por_validade": false,
+        "brinde": false,
+        "serie": "Sim"
+    }
+]

@@ -30,7 +30,7 @@
         "setor": "Comercial",
         "data_admissao": "29/07/2022",
         "email": "thiago.martins@email.com",
-        "idade": 31
+        "idade": 32
     },
     {
         "tipo": "funcionario",
@@ -52,7 +52,7 @@
         "setor": "Suporte",
         "data_admissao": "18/01/2024",
         "email": "bruno.fernandes@email.com",
-        "idade": 35
+        "idade": 36
     },
     {
         "tipo": "funcionario",

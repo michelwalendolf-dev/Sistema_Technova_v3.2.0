@@ -1,5 +1,5 @@
 import customtkinter as ctk 
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageDraw
 import json
 import os
@@ -237,6 +237,7 @@ class TelaLogin(ctk.CTk):
         win.grab_set()
         win.transient(self)
         win.focus_set()
+        win.after(200, lambda: win.iconbitmap("icones//logo.ico"))
 
         ctk.CTkLabel(
             win, 
@@ -500,6 +501,7 @@ class TelaRegistroUsuario(ctk.CTkToplevel):
         self.configure(fg_color="#f7f7fb")
         self.foto_path = SEM_IMAGEM
         self.dados_usuario = dados_usuario
+        self.after(200, lambda: self.iconbitmap("icones//logo.ico"))
         
         self.vars = {
             "nome": ctk.StringVar(value=tratar_valor_vazio(dados_usuario.get("nome", "")) if dados_usuario else ""),
@@ -514,7 +516,7 @@ class TelaRegistroUsuario(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             self, 
-            text="Cadastro de Usuário" if not dados_usuario else "Alterar Dados do Usuário", 
+            text="Cadastro de Usuario" if not dados_usuario else "Alterar Dados do Usuario", 
             font=("Roboto", 22, "bold"), 
             text_color="#3a3a3a"
         ).pack(pady=(18, 10))
@@ -743,6 +745,7 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
         self.tipo_var = ctk.StringVar(value="cliente")
         self.campos_frame = None
         self.vars = {}
+        self.after(200, lambda: self.iconbitmap("icones//logo.ico"))
         
         self.cep_disponivel = True
         try:
@@ -1013,144 +1016,6 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
         self.master.master.atualizar_lista()
         self.destroy()
 
-class TelaBuscaPessoa(ctk.CTkToplevel):
-    def __init__(self, master, acao):
-        super().__init__(master)
-        self.title(f"{acao.capitalize()} Pessoa")
-        self.geometry("400x300")
-        self.resizable(False, False)
-        self.configure(fg_color="#f7f7fb")
-        self.acao = acao
-        self.pessoa = None
-        self.tipo = None
-        self.documento_var = ctk.StringVar()
-
-        ctk.CTkLabel(
-            self, 
-            text=f"{acao.capitalize()} Pessoa por CPF/CNPJ", 
-            font=("Roboto", 22, "bold"), 
-            text_color="#3a3a3a"
-        ).pack(pady=(18, 10))
-
-        frame_principal = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=18)
-        frame_principal.pack(padx=24, pady=10, fill="both", expand=True)
-
-        doc_frame = ctk.CTkFrame(frame_principal, fg_color="transparent")
-        doc_frame.pack(pady=20, padx=10, fill="x")
-        
-        ctk.CTkLabel(doc_frame, text="CPF/CNPJ:", font=("Roboto", 14)).pack(side="left", padx=(0, 10))
-        self.documento_entry = ctk.CTkEntry(
-            doc_frame, 
-            textvariable=self.documento_var, 
-            width=200, 
-            height=32, 
-            corner_radius=10, 
-            font=("Roboto", 12),
-            placeholder_text="000.000.000-00 ou 00.000.000/0000-00"
-        )
-        self.documento_entry.pack(side="left", padx=(0, 5))
-
-        buscar_btn = ctk.CTkButton(
-            doc_frame, 
-            text="🔍", 
-            font=("Roboto", 18), 
-            width=40, 
-            height=32, 
-            corner_radius=10,
-            command=self.buscar_pessoa,
-            fg_color="#4f8cff", 
-            hover_color="#357ae8",
-            border_width=1,
-            border_color="#D5D5D5"
-        )
-        buscar_btn.pack(side="left")
-        
-        self.nome_label = ctk.CTkLabel(frame_principal, text="", font=("Roboto", 14), text_color="#3a3a3a")
-        self.nome_label.pack(pady=10)
-        
-        btn_text = acao.capitalize()
-        btn_color = "#e74c3c" if acao == "excluir" else "#4f8cff"
-        self.acao_btn = ctk.CTkButton(
-            frame_principal, 
-            text=btn_text, 
-            command=self.executar_acao,
-            fg_color=btn_color, 
-            hover_color="#c0392b" if acao == "excluir" else "#357ae8", 
-            text_color="#fff", 
-            font=("Roboto", 14, "bold"), 
-            corner_radius=12, 
-            height=38,
-            border_width=1,
-            border_color="#D5D5D5"
-        )
-        self.acao_btn.pack(pady=20)
-        self.acao_btn.configure(state="disabled")
-
-    def buscar_pessoa(self):
-        documento = self.documento_var.get()
-        if not validar_cpf(documento) and not validar_cnpj(documento):
-            messagebox.showerror("Erro", "Documento inválido!")
-            return
-
-        self.pessoa, self.tipo = buscar_pessoa_por_documento(documento)
-        if self.pessoa:
-            self.nome_label.configure(text=f"Pessoa encontrada: {tratar_valor_vazio(self.pessoa['nome'])}")
-            self.acao_btn.configure(state="normal")
-        else:
-            self.nome_label.configure(text="Pessoa não encontrada", text_color="#e74c3c")
-            self.acao_btn.configure(state="disabled")
-
-    def executar_acao(self):
-        if not self.pessoa or not self.tipo:
-            return
-        
-        if self.acao == "excluir":
-            self.excluir_pessoa()
-        elif self.acao == "editar":
-            self.editar_pessoa()
-        elif self.acao == "pesquisar":
-            self.mostrar_detalhes()
-    
-    def excluir_pessoa(self):
-        resposta = messagebox.askyesno(
-            "Confirmar Exclusão", 
-            f"Tem certeza que deseja excluir {tratar_valor_vazio(self.pessoa['nome'])}?"
-        )
-        if resposta:
-            arquivo = ARQUIVO_PESSOAS[self.tipo]
-            pessoas = carregar_dados_banco(arquivo)
-            pessoas = [p for p in pessoas if p.get("cpf") != self.pessoa.get("cpf") and p.get("cnpj") != self.pessoa.get("cnpj")]
-            salvar_dados_banco(arquivo, pessoas)
-            messagebox.showinfo("Sucesso", "Pessoa excluída com sucesso!")
-            self.master.atualizar_lista() 
-            self.destroy()
-    
-    def editar_pessoa(self):
-        win = TelaCadastroPessoa(self.master, self.pessoa)
-        win.grab_set()
-        self.destroy()
-    
-    def mostrar_detalhes(self):
-        detalhes = f"Nome: {tratar_valor_vazio(self.pessoa['nome'])}\n"
-        detalhes += f"Tipo: {self.pessoa['tipo'].capitalize()}\n"
-        
-        if 'cpf' in self.pessoa: detalhes += f"CPF: {tratar_valor_vazio(self.pessoa['cpf'])}\n"
-        if 'cnpj' in self.pessoa: detalhes += f"CNPJ: {tratar_valor_vazio(self.pessoa['cnpj'])}\n"
-        if 'data_nasc' in self.pessoa: detalhes += f"Nascimento: {tratar_valor_vazio(self.pessoa['data_nasc'])} (Idade: {tratar_valor_vazio(self.pessoa.get('idade', 'N/A'))})\n"
-        if 'departamento' in self.pessoa: detalhes += f"Departamento: {tratar_valor_vazio(self.pessoa['departamento'])}\n"
-        if 'setor' in self.pessoa: detalhes += f"Setor: {tratar_valor_vazio(self.pessoa['setor'])}\n"
-        if 'data_admissao' in self.pessoa: detalhes += f"Admissão: {tratar_valor_vazio(self.pessoa['data_admissao'])}\n"
-        if 'tipo_fornecimento' in self.pessoa: detalhes += f"Fornecimento: {tratar_valor_vazio(self.pessoa['tipo_fornecimento'])}\n"
-        if 'email' in self.pessoa: detalhes += f"Email: {tratar_valor_vazio(self.pessoa['email'])}\n"
-        if 'cep' in self.pessoa: detalhes += f"CEP: {tratar_valor_vazio(self.pessoa['cep'])}\n"
-        if 'endereco' in self.pessoa: detalhes += f"Endereço: {tratar_valor_vazio(self.pessoa['endereco'])}\n"
-        if 'numero' in self.pessoa: detalhes += f"Número: {tratar_valor_vazio(self.pessoa['numero'])}\n"
-        if 'bairro' in self.pessoa: detalhes += f"Bairro: {tratar_valor_vazio(self.pessoa['bairro'])}\n"
-        if 'cidade' in self.pessoa: detalhes += f"Cidade: {tratar_valor_vazio(self.pessoa['cidade'])}\n"
-        if 'estado' in self.pessoa: detalhes += f"Estado: {tratar_valor_vazio(self.pessoa['estado'])}\n"
-        
-        messagebox.showinfo("Detalhes da Pessoa", detalhes)
-
 class TelaExportar(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
@@ -1159,6 +1024,7 @@ class TelaExportar(ctk.CTkToplevel):
         self.resizable(False, False)
         self.configure(fg_color="#f7f7fb")
         self.tipo_var = ctk.StringVar(value="cliente")
+        self.after(200, lambda: self.iconbitmap("icones//logo.ico"))
 
         ctk.CTkLabel(self, text="Exportar Dados", font=("Roboto", 18, "bold")).pack(pady=20)
 
@@ -1265,6 +1131,7 @@ class TelaImportar(ctk.CTkToplevel):
         self.resizable(False, False)
         self.configure(fg_color="#f7f7fb")
         self.file_path = ""
+        self.after(200, lambda: self.iconbitmap("icones//logo.ico"))
 
         ctk.CTkLabel(self, text="Importar Dados", font=("Roboto", 18, "bold")).pack(pady=20)
 
@@ -1449,6 +1316,7 @@ class TelaPrincipal(ctk.CTkToplevel):
         self.state("zoomed")
         self.configure(fg_color="#f0f0f0")
         self.user = user
+        self.after(200, lambda: self.iconbitmap("icones//logo.ico"))
         
         # Configurar grid principal
         self.grid_rowconfigure(2, weight=1)
@@ -1468,6 +1336,104 @@ class TelaPrincipal(ctk.CTkToplevel):
         
         # Atualizar lista de pessoas
         self.atualizar_lista()
+
+    def criar_moldura_usuario(self, parent):
+        # Frame principal para organizar a moldura e as informações
+        main_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        main_frame.pack(pady=(10, 20), padx=10, fill="x")
+        
+        # Moldura apenas para a foto
+        moldura_frame = ctk.CTkFrame(
+            main_frame,
+            fg_color="#047194",
+            border_color="#025C7A",
+            border_width=4,
+            corner_radius=20,
+            width=220,
+            height=220
+        )
+        moldura_frame.pack(pady=(0, 10))
+        moldura_frame.pack_propagate(False)  # Impede que o frame redimensionse com base no conteúdo
+        
+        # Carregar e exibir a foto do usuário dentro da moldura
+        try:
+            foto_path = self.user.get("foto", SEM_IMAGEM)
+            if not os.path.exists(foto_path):
+                foto_path = SEM_IMAGEM
+                
+            user_img = Image.open(foto_path).resize((200, 200), Image.LANCZOS)  # Imagem aumentada
+            user_photo = ctk.CTkImage(light_image=user_img, size=(200, 200))
+            
+            foto_label = ctk.CTkLabel(
+                moldura_frame,
+                image=user_photo,
+                text="",
+                fg_color="transparent"
+            )
+            foto_label.pack(expand=True, padx=10, pady=10)
+        except Exception as e:
+            print(f"Erro ao carregar foto: {e}")
+            foto_label = ctk.CTkLabel(
+                moldura_frame,
+                text="📷",
+                font=("Arial", 50),
+                fg_color="transparent"
+            )
+            foto_label.pack(expand=True)
+
+        # Informações do usuário (fora da moldura)
+        info_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        info_frame.pack(pady=(0, 5), padx=10, fill="x")
+        
+        # Nome do usuário
+        nome = self.user.get("nome", "N/A")
+        nome_label = ctk.CTkLabel(
+            info_frame,
+            text=nome,
+            font=("Roboto", 18, "bold"),
+            text_color="#2C3E50",
+            anchor="w",
+            justify="left"
+        )
+        nome_label.pack(pady=(0, 5), fill="x")
+
+        # Data de nascimento e idade
+        data_nasc = self.user.get("data_nasc", "N/A")
+        idade = self.user.get("idade", "N/A")
+        nasc_label = ctk.CTkLabel(
+            info_frame,
+            text=f"Nasc: {data_nasc} ({idade} anos)",
+            font=("Roboto", 14),
+            text_color="#566573",
+            anchor="w",
+            justify="left"
+        )
+        nasc_label.pack(pady=(0, 5), fill="x")
+
+        departamento = self.user.get("departamento", "N/A")
+        depto_label = ctk.CTkLabel(
+            info_frame,
+            text=f"Departamento: {departamento}",
+            font=("Roboto", 14),
+            text_color="#566573",
+            anchor="w",
+            justify="left"
+        )
+        depto_label.pack(pady=(0, 5), fill="x")
+
+        # Setor
+        setor = self.user.get("setor", "N/A")
+        setor_label = ctk.CTkLabel(
+            info_frame,
+            text=f"Setor: {setor}",
+            font=("Roboto", 14),
+            text_color="#566573",
+            anchor="w",
+            justify="left"
+        )
+        setor_label.pack(pady=(0, 5), fill="x")
+
+        return main_frame
 
     def criar_header(self):
         # Frame do cabeçalho
@@ -1499,21 +1465,21 @@ class TelaPrincipal(ctk.CTkToplevel):
         user_frame = ctk.CTkFrame(header_frame, fg_color="#f2f2f2")
         user_frame.grid(row=0, column=1, sticky="w", padx=(0, 15), pady=15)
 
-        user_label = ctk.CTkLabel(
+        ctk.CTkLabel(
             user_frame,
-            text=f"Usuário: {self.user['nome']}",
+            text="Usuário: ",
             font=("Roboto", 14, "bold"),
             text_color="black"
-        )
-        user_label.pack(side="left", padx=(0, 5))
+        ).pack(side="left", padx=(0, 0))
 
-        dept_label = ctk.CTkLabel(
+        # Nome de usuário em vermelho
+        user_name_label = ctk.CTkLabel(
             user_frame,
-            text=f"Depto: {self.user.get('departamento', 'N/A')}",
-            font=("Roboto", 12),
-            text_color="#555"
+            text=self.user['usuario'],
+            font=("Roboto", 14, "bold"),
+            text_color="red"
         )
-        dept_label.pack(side="left", padx=(5, 0))
+        user_name_label.pack(side="left", padx=(0, 10))
 
         # Relógio
         clock_frame = ctk.CTkFrame(
@@ -1658,11 +1624,12 @@ class TelaPrincipal(ctk.CTkToplevel):
 
         menu_container = ctk.CTkFrame(sidebar_frame, fg_color="#f9f9f9", border_color="#c0c0c0", border_width=3, corner_radius=0)
         menu_container.pack(fill="both", expand=True, padx=0, pady=0)
+        
+        # Adicionar moldura do usuário
+        self.criar_moldura_usuario(menu_container)
 
         # Menu de opções
         menu_items = [
-            "👥 Pessoas",
-            "⬇️ Importações",
             "⚙️ Configurações",
         ]
 
@@ -1680,32 +1647,66 @@ class TelaPrincipal(ctk.CTkToplevel):
             )
             menu_btn.pack(fill="x", pady=5, padx=10)
 
+        # OptionMenu para Importar/Exportar
+        self.opcao_import_export = ctk.StringVar(value="📊 Importações")
+        opcoes_import_export = ["Importar", "Exportar"]
+        option_menu = ctk.CTkOptionMenu(
+            menu_container,
+            variable=self.opcao_import_export,
+            values=opcoes_import_export,
+            command=self.menu_import_export_selecionado,
+            height=40,
+            fg_color="#f9f9f9",
+            button_color="#f9f9f9",
+            button_hover_color="#e0e0e0",
+            text_color="black",
+            font=("Segoe UI Emoji", 16),
+            anchor="w",
+            dropdown_fg_color="#f9f9f9",
+            dropdown_hover_color="#e0e0e0",
+            dropdown_text_color="black",
+            dropdown_font=("Segoe UI Emoji", 16)
+        )
+        option_menu.pack(fill="x", pady=5, padx=10)
+
+        # Botão Agenda
+        agenda_btn = ctk.CTkButton(
+            menu_container,
+            text="📅 Agenda",
+            height=40,
+            fg_color="#f9f9f9",
+            hover_color="#e0e0e0",
+            text_color="black",
+            font=("Segoe UI Emoji", 16),
+            anchor="w",
+            command=self.abrir_agenda
+        )
+        agenda_btn.pack(fill="x", pady=5, padx=10)
+
         # Área de conteúdo
         content_frame = ctk.CTkFrame(body_frame, fg_color="#ffffff", border_color="#c0c0c0", border_width=3)
         content_frame.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
+        content_frame.grid_rowconfigure(1, weight=0)  # Para os botões na parte inferior
 
         # Frame para as listas de pessoas
         self.listas_frame = ctk.CTkFrame(content_frame, fg_color="white")
         self.listas_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         self.listas_frame.grid_rowconfigure(0, weight=1)
         self.listas_frame.grid_columnconfigure(0, weight=1)
-        self.listas_frame.grid_columnconfigure(1, weight=1)
-        self.listas_frame.grid_columnconfigure(2, weight=1)
 
-        # Botões de ação
-        botoes_frame = ctk.CTkFrame(content_frame, fg_color="white", height=50)
+        # Frame para os botões (centralizado na parte inferior)
+        botoes_frame = ctk.CTkFrame(content_frame, fg_color="white")
         botoes_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
-        botoes_frame.grid_propagate(False)
         botoes_frame.grid_columnconfigure(0, weight=1)
-        botoes_frame.grid_columnconfigure(1, weight=1)
-        botoes_frame.grid_columnconfigure(2, weight=1)
-        botoes_frame.grid_columnconfigure(3, weight=1)
+        botoes_frame.grid_columnconfigure(1, weight=0)
+        botoes_frame.grid_columnconfigure(2, weight=0)
+        botoes_frame.grid_columnconfigure(3, weight=0)
+        botoes_frame.grid_columnconfigure(4, weight=1)
 
         botoes_acoes = [
             ("Cadastrar", "#4CAF50", self.abrir_cadastro_menu),
-            ("Pesquisar", "#047194", self.abrir_pesquisar),
             ("Editar", "#047194", self.abrir_editar),
             ("Excluir", "#e74c3c", self.abrir_excluir)
         ]
@@ -1719,51 +1720,39 @@ class TelaPrincipal(ctk.CTkToplevel):
                 hover_color="#008ab6" if texto != "Excluir" else "#c0392b",
                 text_color="#fff",
                 font=("Roboto", 14, "bold"),
-                height=35
+                height=35,
+                width=100
             )
-            btn.grid(row=0, column=i, padx=5, pady=5)
+            btn.grid(row=0, column=i+1, padx=5, pady=5)
+            # Armazenar referências aos botões
+            if texto == "Editar":
+                self.btn_editar = btn
+            elif texto == "Excluir":
+                self.btn_excluir = btn
 
-        # Botões adicionais
-        botoes_adicionais_frame = ctk.CTkFrame(content_frame, fg_color="white", height=40)
-        botoes_adicionais_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
-        botoes_adicionais_frame.grid_propagate(False)
-        botoes_adicionais_frame.grid_columnconfigure(0, weight=1)
-        botoes_adicionais_frame.grid_columnconfigure(1, weight=1)
+        # Inicialmente desabilitar os botões de editar e excluir
+        self.btn_editar.configure(state="disabled")
+        self.btn_excluir.configure(state="disabled")
 
-        btn_importar = ctk.CTkButton(
-            botoes_adicionais_frame,
-            text="Importar",
-            command=self.abrir_importar,
-            fg_color="#2ecc71",
-            hover_color="#27ae60",
-            text_color="#fff",
-            font=("Roboto", 14, "bold"),
-            height=30
-        )
-        btn_importar.grid(row=0, column=0, padx=5, pady=5)
+    def menu_import_export_selecionado(self, opcao):
+        if opcao == "Importar":
+            self.abrir_importar()
+        elif opcao == "Exportar":
+            self.abrir_exportar()
 
-        btn_exportar = ctk.CTkButton(
-            botoes_adicionais_frame,
-            text="Exportar",
-            command=self.abrir_exportar,
-            fg_color="#9b59b6",
-            hover_color="#8e44ad",
-            text_color="#fff",
-            font=("Roboto", 14, "bold"),
-            height=30
-        )
-        btn_exportar.grid(row=0, column=1, padx=5, pady=5)
+    def abrir_agenda(self):
+        try:
+            if os.path.exists("COD_AGENDA.py"):
+                subprocess.Popen([sys.executable, "COD_AGENDA.py"])
+            else:
+                messagebox.showwarning("Aviso", "Arquivo da agenda não encontrado!")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível abrir a agenda:\n{str(e)}")
 
     def menu_selecionado(self, opcao):
         # Implementar ações para cada opção do menu
-        if opcao == "👥 Pessoas":
-            self.atualizar_lista()
-        elif opcao == "📊 Relatórios":
-            messagebox.showinfo("Relatórios", "Funcionalidade de relatórios em desenvolvimento")
-        elif opcao == "⚙️ Configurações":
+        if opcao == "⚙️ Configurações":
             self.alterar_informacoes_usuario()
-        elif opcao == "📖 Ajuda":
-            self.abrir_ajuda()
 
     def atualizar_relogio(self):
         now = time.localtime()
@@ -1795,18 +1784,6 @@ class TelaPrincipal(ctk.CTkToplevel):
                 messagebox.showwarning("Aviso", "Arquivo de sobre não encontrado!")
         except Exception as e:
             messagebox.showerror("Erro", f"Não foi possível abrir a tela sobre:\n{str(e)}")
-
-    def abrir_pesquisar(self):
-        win = TelaBuscaPessoa(self, "pesquisar")
-        win.grab_set()
-    
-    def abrir_excluir(self):
-        win = TelaBuscaPessoa(self, "excluir")
-        win.grab_set()
-    
-    def abrir_editar(self):
-        win = TelaBuscaPessoa(self, "editar")
-        win.grab_set()
     
     def abrir_importar(self):
         win = TelaImportar(self)
@@ -1821,6 +1798,61 @@ class TelaPrincipal(ctk.CTkToplevel):
         win.grab_set()
         win.wait_window()
         self.atualizar_lista()
+
+    def abrir_editar(self):
+        # Verificar se há uma seleção
+        if not hasattr(self, 'treeview_selecionada') or not self.treeview_selecionada.selection():
+            messagebox.showwarning("Aviso", "Selecione um registro para editar.")
+            return
+
+        selected_item = self.treeview_selecionada.selection()[0]
+        valores = self.treeview_selecionada.item(selected_item, 'values')
+        tipo = self.tipo_selecionado
+
+        # Obter o documento (CPF ou CNPJ) para buscar a pessoa
+        if tipo == "fornecedor":
+            documento = valores[1]  # CNPJ
+        else:
+            documento = valores[1]  # CPF
+
+        pessoa, _ = buscar_pessoa_por_documento(documento)
+        if pessoa:
+            win = TelaCadastroPessoa(self, pessoa)
+            win.grab_set()
+            win.wait_window()
+            self.atualizar_lista()
+        else:
+            messagebox.showerror("Erro", "Pessoa não encontrada.")
+
+    def abrir_excluir(self):
+        if not hasattr(self, 'treeview_selecionada') or not self.treeview_selecionada.selection():
+            messagebox.showwarning("Aviso", "Selecione um registro para excluir.")
+            return
+
+        selected_item = self.treeview_selecionada.selection()[0]
+        valores = self.treeview_selecionada.item(selected_item, 'values')
+        tipo = self.tipo_selecionado
+
+        if tipo == "fornecedor":
+            documento = valores[1]  # CNPJ
+        else:
+            documento = valores[1]  # CPF
+
+        pessoa, _ = buscar_pessoa_por_documento(documento)
+        if pessoa:
+            resposta = messagebox.askyesno(
+                "Confirmar Exclusão", 
+                f"Tem certeza que deseja excluir {tratar_valor_vazio(pessoa['nome'])}?"
+            )
+            if resposta:
+                arquivo = ARQUIVO_PESSOAS[tipo]
+                pessoas = carregar_dados_banco(arquivo)
+                pessoas = [p for p in pessoas if p.get("cpf") != pessoa.get("cpf") and p.get("cnpj") != pessoa.get("cnpj")]
+                salvar_dados_banco(arquivo, pessoas)
+                messagebox.showinfo("Sucesso", "Pessoa excluída com sucesso!")
+                self.atualizar_lista()
+        else:
+            messagebox.showerror("Erro", "Pessoa não encontrada.")
 
     def alterar_informacoes_usuario(self):
         win = TelaRegistroUsuario(self, self.user)
@@ -1848,80 +1880,154 @@ class TelaPrincipal(ctk.CTkToplevel):
         for widget in self.listas_frame.winfo_children():
             widget.destroy()
 
-        # Criar frames para cada tipo de pessoa
+        # Criar abas para os diferentes tipos de pessoas
+        notebook = ttk.Notebook(self.listas_frame)
+        notebook.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Dicionário para armazenar as treeviews
+        self.treeviews = {}
+
+        # Para cada tipo de pessoa, criar uma aba com uma treeview
         tipos = ["cliente", "funcionario", "fornecedor"]
         titulos = ["Clientes", "Funcionários", "Fornecedores"]
-        cores = ["#E8F5E9", "#E3F2FD", "#FFF3E0"]
 
-        for i, (tipo, titulo, cor) in enumerate(zip(tipos, titulos, cores)):
-            frame_tipo = ctk.CTkFrame(
-                self.listas_frame, 
-                fg_color=cor,
-                corner_radius=10
-            )
-            frame_tipo.grid(row=0, column=i, sticky="nsew", padx=5, pady=5)
-            frame_tipo.grid_rowconfigure(1, weight=1)
-            frame_tipo.grid_columnconfigure(0, weight=1)
+        for tipo, titulo in zip(tipos, titulos):
+            # Frame para a aba
+            frame_aba = ctk.CTkFrame(notebook, fg_color="white")
+            notebook.add(frame_aba, text=titulo)
 
-            # Título
-            ctk.CTkLabel(
-                frame_tipo,
-                text=titulo,
-                font=("Roboto", 16, "bold"),
-                text_color="#2C3E50"
-            ).grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+            # Treeview com barra de rolagem
+            frame_tree = ctk.CTkFrame(frame_aba, fg_color="white")
+            frame_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-            # Lista scrollável
-            scroll_frame = ctk.CTkScrollableFrame(
-                frame_tipo,
-                fg_color="white"
-            )
-            scroll_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+            # Definir colunas com base no tipo
+            if tipo == "cliente":
+                colunas = ["Nome", "CPF", "Data Nasc.", "Idade", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
+            elif tipo == "funcionario":
+                colunas = ["Nome", "CPF", "Data Nasc.", "Idade", "Departamento", "Setor", "Data Admissão", "Email"]
+            else:  # fornecedor
+                colunas = ["Nome", "CNPJ", "Tipo Fornecimento", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
 
-            # Carregar dados
-            arquivo = ARQUIVO_PESSOAS[tipo]
-            pessoas = carregar_dados_banco(arquivo)
+            # Configurar estilo da treeview
+            style = ttk.Style()
+            style.theme_use("clam")
+            style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
+            style.configure("Treeview", font=("Segoe UI", 10), background="white", fieldbackground="white", foreground="black")
 
-            if not pessoas:
-                ctk.CTkLabel(
-                    scroll_frame,
-                    text="Nenhum registro encontrado",
-                    font=("Roboto", 12),
-                    text_color="#7F8C8D"
-                ).pack(pady=20)
-            else:
-                for p in pessoas[:20]:  # Limitar a 20 registros por performance
-                    person_card = ctk.CTkFrame(
-                        scroll_frame,
-                        fg_color="#F8F9FA",
-                        corner_radius=5,
-                        border_width=1,
-                        border_color="#E9ECEF"
-                    )
-                    person_card.pack(fill="x", pady=2, padx=5)
+            # Criar treeview
+            treeview = ttk.Treeview(frame_tree, columns=colunas, show="headings", height=15)
+            
+            # Configurar cabeçalhos
+            for col in colunas:
+                treeview.heading(col, text=col)
+                treeview.column(col, width=100, anchor="w")
 
-                    campos = [f"Nome: {tratar_valor_vazio(p.get('nome'))}"]
-                    if 'cpf' in p: campos.append(f"CPF: {tratar_valor_vazio(p.get('cpf'))}")
-                    if 'cnpj' in p: campos.append(f"CNPJ: {tratar_valor_vazio(p.get('cnpj'))}")
-                    if 'email' in p: campos.append(f"Email: {tratar_valor_vazio(p.get('email'))}")
+            # Ajustar larguras específicas
+            if tipo == "cliente":
+                treeview.column("Nome", width=150)
+                treeview.column("Email", width=150)
+                treeview.column("Endereço", width=150)
+            elif tipo == "funcionario":
+                treeview.column("Nome", width=150)
+                treeview.column("Departamento", width=120)
+                treeview.column("Setor", width=120)
+            else:  # fornecedor
+                treeview.column("Nome", width=150)
+                treeview.column("Tipo Fornecimento", width=150)
+                treeview.column("Email", width=150)
 
-                    for campo in campos:
-                        ctk.CTkLabel(
-                            person_card,
-                            text=campo,
-                            font=("Roboto", 10),
-                            text_color="#2C3E50",
-                            anchor="w",
-                            justify="left"
-                        ).pack(anchor="w", padx=5, pady=2)
+            # Barra de rolagem
+            scrollbar = ttk.Scrollbar(frame_tree, orient="vertical", command=treeview.yview)
+            treeview.configure(yscrollcommand=scrollbar.set)
+            
+            treeview.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
 
-                if len(pessoas) > 20:
-                    ctk.CTkLabel(
-                        scroll_frame,
-                        text=f"... e mais {len(pessoas) - 20} registros",
-                        font=("Roboto", 10),
-                        text_color="#7F8C8D"
-                    ).pack(pady=5)
+            # Preencher com dados
+            self.preencher_treeview(tipo, treeview)
+            
+            # Armazenar a treeview no dicionário
+            self.treeviews[tipo] = treeview
+
+            # Vincular evento de seleção
+            treeview.bind('<<TreeviewSelect>>', lambda e, t=tipo: self.on_treeview_select(e, t))
+            # Vincular evento de duplo clique
+            treeview.bind('<Double-1>', lambda e, t=tipo: self.on_double_click(e, t))
+
+    def preencher_treeview(self, tipo, treeview):
+        # Limpar treeview
+        for item in treeview.get_children():
+            treeview.delete(item)
+        
+        # Carregar dados
+        arquivo = ARQUIVO_PESSOAS[tipo]
+        pessoas = carregar_dados_banco(arquivo)
+        
+        # Adicionar dados à treeview
+        for pessoa in pessoas:
+            if tipo == "cliente":
+                valores = [
+                    tratar_valor_vazio(pessoa.get("nome", "")),
+                    tratar_valor_vazio(pessoa.get("cpf", "")),
+                    tratar_valor_vazio(pessoa.get("data_nasc", "")),
+                    tratar_valor_vazio(pessoa.get("idade", "")),
+                    tratar_valor_vazio(pessoa.get("email", "")),
+                    tratar_valor_vazio(pessoa.get("cep", "")),
+                    tratar_valor_vazio(pessoa.get("endereco", "")),
+                    tratar_valor_vazio(pessoa.get("numero", "")),
+                    tratar_valor_vazio(pessoa.get("bairro", "")),
+                    tratar_valor_vazio(pessoa.get("cidade", "")),
+                    tratar_valor_vazio(pessoa.get("estado", ""))
+                ]
+            elif tipo == "funcionario":
+                valores = [
+                    tratar_valor_vazio(pessoa.get("nome", "")),
+                    tratar_valor_vazio(pessoa.get("cpf", "")),
+                    tratar_valor_vazio(pessoa.get("data_nasc", "")),
+                    tratar_valor_vazio(pessoa.get("idade", "")),
+                    tratar_valor_vazio(pessoa.get("departamento", "")),
+                    tratar_valor_vazio(pessoa.get("setor", "")),
+                    tratar_valor_vazio(pessoa.get("data_admissao", "")),
+                    tratar_valor_vazio(pessoa.get("email", ""))
+                ]
+            else:  # fornecedor
+                valores = [
+                    tratar_valor_vazio(pessoa.get("nome", "")),
+                    tratar_valor_vazio(pessoa.get("cnpj", "")),
+                    tratar_valor_vazio(pessoa.get("tipo_fornecimento", "")),
+                    tratar_valor_vazio(pessoa.get("email", "")),
+                    tratar_valor_vazio(pessoa.get("cep", "")),
+                    tratar_valor_vazio(pessoa.get("endereco", "")),
+                    tratar_valor_vazio(pessoa.get("numero", "")),
+                    tratar_valor_vazio(pessoa.get("bairro", "")),
+                    tratar_valor_vazio(pessoa.get("cidade", "")),
+                    tratar_valor_vazio(pessoa.get("estado", ""))
+                ]
+            
+            treeview.insert("", "end", values=valores)
+
+    def on_treeview_select(self, event, tipo):
+        treeview = self.treeviews[tipo]
+        selected = treeview.selection()
+        if selected:
+            # Habilitar botões de ação quando um item é selecionado
+            self.btn_editar.configure(state="normal")
+            self.btn_excluir.configure(state="normal")
+            # Armazenar a treeview e o tipo atualmente selecionados
+            self.treeview_selecionada = treeview
+            self.tipo_selecionado = tipo
+        else:
+            # Desabilitar botões quando nenhum item está selecionado
+            self.btn_editar.configure(state="disabled")
+            self.btn_excluir.configure(state="disabled")
+
+    def on_double_click(self, event, tipo):
+        # Obter a treeview clicada
+        treeview = self.treeviews[tipo]
+        selected = treeview.selection()
+        if selected:
+            # Simular clique no botão editar
+            self.abrir_editar()
 
 if __name__ == "__main__":
     os.makedirs("fotos", exist_ok=True)
