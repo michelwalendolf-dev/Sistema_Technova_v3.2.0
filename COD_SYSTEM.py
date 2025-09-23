@@ -23,7 +23,6 @@ ARQUIVO_PESSOAS = {
 SEM_IMAGEM = "fotos/sem_imagem.png"
 
 def tratar_valor_vazio(valor):
-    """Substitui valores vazios, None, NaN por 'N/A'"""
     if valor is None:
         return "N/A"
     try:
@@ -162,14 +161,12 @@ class TelaLogin(ctk.CTk):
         usuario = self.usuario_var.get()
         senha = self.senha_var.get()
         
-        # Reset dos indicadores de erro
         self.erros = {}
         self.usuario_asterisk.configure(text="")
         self.senha_asterisk.configure(text="")
         self.usuario_entry.configure(border_color="#ccc")
         self.senha_entry.configure(border_color="#ccc")
         
-        # Verificar campos vazios e CAPTCHA
         campos_vazios = []
         if not usuario.strip():
             campos_vazios.append("usuário")
@@ -180,7 +177,6 @@ class TelaLogin(ctk.CTk):
             self.senha_entry.configure(border_color="#ffcccc")
             self.senha_asterisk.configure(text="×")
         
-        # Verificar CAPTCHA
         if not self.captcha_verified:
             if campos_vazios:
                 mensagem_erro = "Preencha os campos de " + ", ".join(campos_vazios) + " e complete o CAPTCHA"
@@ -190,7 +186,6 @@ class TelaLogin(ctk.CTk):
             self.captcha_error = True
             return
             
-        # Se chegou aqui, o CAPTCHA está verificado mas pode ter campos vazios
         if campos_vazios:
             mensagem_erro = "Preencha os campos de " + ", ".join(campos_vazios)
             self.msg_label.configure(text=mensagem_erro, text_color="#e74c3c")
@@ -1318,31 +1313,26 @@ class TelaPrincipal(ctk.CTkToplevel):
         self.user = user
         self.after(200, lambda: self.iconbitmap("icones//logo.ico"))
         
-        # Configurar grid principal
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
-        # Criar cabeçalho
         self.criar_header()
         
-        # Criar barra divisória
         self.criar_divisoria()
         
-        # Criar área principal
         self.criar_body()
         
-        # Configurar relógio
         self.atualizar_relogio()
         
-        # Atualizar lista de pessoas
+        # Construir a estrutura das abas primeiro
+        self.construir_abas()
+        # Depois preencher com os dados
         self.atualizar_lista()
 
     def criar_moldura_usuario(self, parent):
-        # Frame principal para organizar a moldura e as informações
         main_frame = ctk.CTkFrame(parent, fg_color="transparent")
         main_frame.pack(pady=(10, 20), padx=10, fill="x")
         
-        # Moldura apenas para a foto
         moldura_frame = ctk.CTkFrame(
             main_frame,
             fg_color="#047194",
@@ -1353,15 +1343,14 @@ class TelaPrincipal(ctk.CTkToplevel):
             height=220
         )
         moldura_frame.pack(pady=(0, 10))
-        moldura_frame.pack_propagate(False)  # Impede que o frame redimensionse com base no conteúdo
+        moldura_frame.pack_propagate(False)
         
-        # Carregar e exibir a foto do usuário dentro da moldura
         try:
             foto_path = self.user.get("foto", SEM_IMAGEM)
             if not os.path.exists(foto_path):
                 foto_path = SEM_IMAGEM
                 
-            user_img = Image.open(foto_path).resize((200, 200), Image.LANCZOS)  # Imagem aumentada
+            user_img = Image.open(foto_path).resize((200, 200), Image.LANCZOS)
             user_photo = ctk.CTkImage(light_image=user_img, size=(200, 200))
             
             foto_label = ctk.CTkLabel(
@@ -1381,11 +1370,9 @@ class TelaPrincipal(ctk.CTkToplevel):
             )
             foto_label.pack(expand=True)
 
-        # Informações do usuário (fora da moldura)
         info_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         info_frame.pack(pady=(0, 5), padx=10, fill="x")
         
-        # Nome do usuário
         nome = self.user.get("nome", "N/A")
         nome_label = ctk.CTkLabel(
             info_frame,
@@ -1397,7 +1384,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         )
         nome_label.pack(pady=(0, 5), fill="x")
 
-        # Data de nascimento e idade
         data_nasc = self.user.get("data_nasc", "N/A")
         idade = self.user.get("idade", "N/A")
         nasc_label = ctk.CTkLabel(
@@ -1421,7 +1407,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         )
         depto_label.pack(pady=(0, 5), fill="x")
 
-        # Setor
         setor = self.user.get("setor", "N/A")
         setor_label = ctk.CTkLabel(
             info_frame,
@@ -1436,7 +1421,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         return main_frame
 
     def criar_header(self):
-        # Frame do cabeçalho
         header_frame = ctk.CTkFrame(self, height=110, fg_color="#f2f2f2")
         header_frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
         header_frame.grid_propagate(False)
@@ -1448,7 +1432,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         header_frame.grid_columnconfigure(4, weight=1)
         header_frame.grid_columnconfigure(5, weight=0)
 
-        # Logo
         logo_frame = ctk.CTkFrame(header_frame, width=100, height=100, fg_color="#f2f2f2")
         logo_frame.grid(row=0, column=0, padx=(15, 5), sticky="w", pady=5)
         logo_frame.grid_propagate(False)
@@ -1461,7 +1444,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         except:
             ctk.CTkLabel(logo_frame, text="Logo", font=("Roboto", 10), text_color="black").pack(expand=True)
 
-        # Informações do usuário
         user_frame = ctk.CTkFrame(header_frame, fg_color="#f2f2f2")
         user_frame.grid(row=0, column=1, sticky="w", padx=(0, 15), pady=15)
 
@@ -1472,7 +1454,6 @@ class TelaPrincipal(ctk.CTkToplevel):
             text_color="black"
         ).pack(side="left", padx=(0, 0))
 
-        # Nome de usuário em vermelho
         user_name_label = ctk.CTkLabel(
             user_frame,
             text=self.user['usuario'],
@@ -1481,7 +1462,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         )
         user_name_label.pack(side="left", padx=(0, 10))
 
-        # Relógio
         clock_frame = ctk.CTkFrame(
             header_frame, 
             fg_color="black", 
@@ -1513,7 +1493,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         )
         self.date_label.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 5))
 
-        # Botões do cabeçalho
         right_frame = ctk.CTkFrame(header_frame, fg_color="#f2f2f2")
         right_frame.grid(row=0, column=4, sticky="e", padx=15, pady=15)
 
@@ -1616,7 +1595,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         body_frame.grid_columnconfigure(0, weight=1, uniform="body_cols")
         body_frame.grid_columnconfigure(1, weight=4, uniform="body_cols")
 
-        # Sidebar
         sidebar_frame = ctk.CTkFrame(body_frame, fg_color="#f9f9f9")
         sidebar_frame.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
         sidebar_frame.grid_rowconfigure(0, weight=1)
@@ -1625,10 +1603,8 @@ class TelaPrincipal(ctk.CTkToplevel):
         menu_container = ctk.CTkFrame(sidebar_frame, fg_color="#f9f9f9", border_color="#c0c0c0", border_width=3, corner_radius=0)
         menu_container.pack(fill="both", expand=True, padx=0, pady=0)
         
-        # Adicionar moldura do usuário
         self.criar_moldura_usuario(menu_container)
 
-        # Menu de opções
         menu_items = [
             "⚙️ Configurações",
         ]
@@ -1647,7 +1623,6 @@ class TelaPrincipal(ctk.CTkToplevel):
             )
             menu_btn.pack(fill="x", pady=5, padx=10)
 
-        # OptionMenu para Importar/Exportar
         self.opcao_import_export = ctk.StringVar(value="📊 Importações")
         opcoes_import_export = ["Importar", "Exportar"]
         option_menu = ctk.CTkOptionMenu(
@@ -1669,7 +1644,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         )
         option_menu.pack(fill="x", pady=5, padx=10)
 
-        # Botão Agenda
         agenda_btn = ctk.CTkButton(
             menu_container,
             text="📅 Agenda",
@@ -1683,20 +1657,17 @@ class TelaPrincipal(ctk.CTkToplevel):
         )
         agenda_btn.pack(fill="x", pady=5, padx=10)
 
-        # Área de conteúdo
         content_frame = ctk.CTkFrame(body_frame, fg_color="#ffffff", border_color="#c0c0c0", border_width=3)
         content_frame.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(1, weight=0)  # Para os botões na parte inferior
-
-        # Frame para as listas de pessoas
+        content_frame.grid_rowconfigure(1, weight=0)  
+        
         self.listas_frame = ctk.CTkFrame(content_frame, fg_color="white")
         self.listas_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         self.listas_frame.grid_rowconfigure(0, weight=1)
         self.listas_frame.grid_columnconfigure(0, weight=1)
 
-        # Frame para os botões (centralizado na parte inferior)
         botoes_frame = ctk.CTkFrame(content_frame, fg_color="white")
         botoes_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
         botoes_frame.grid_columnconfigure(0, weight=1)
@@ -1712,27 +1683,121 @@ class TelaPrincipal(ctk.CTkToplevel):
         ]
 
         for i, (texto, cor, comando) in enumerate(botoes_acoes):
+            borda_botoes = {
+                "Cadastrar": "#2E7D32",
+                "Editar": "#034b66",
+                "Excluir": "#c0392b"
+            }[texto]
+
+            hover_botoes = {
+                "Cadastrar": "#66BB6A",
+                "Editar": "#0490c7",
+                "Excluir": "#ff6b5c"
+            }[texto]
+
             btn = ctk.CTkButton(
                 botoes_frame,
                 text=texto,
                 command=comando,
                 fg_color=cor,
-                hover_color="#008ab6" if texto != "Excluir" else "#c0392b",
+                hover_color=hover_botoes,
                 text_color="#fff",
                 font=("Roboto", 14, "bold"),
                 height=35,
-                width=100
+                width=100,
+                border_width=2,
+                border_color=borda_botoes
             )
             btn.grid(row=0, column=i+1, padx=5, pady=5)
-            # Armazenar referências aos botões
             if texto == "Editar":
                 self.btn_editar = btn
             elif texto == "Excluir":
                 self.btn_excluir = btn
 
-        # Inicialmente desabilitar os botões de editar e excluir
         self.btn_editar.configure(state="disabled")
         self.btn_excluir.configure(state="disabled")
+
+    def construir_abas(self):
+        # Se o notebook já existe, não recriar
+        if hasattr(self, 'notebook'):
+            return
+
+        self.notebook = ttk.Notebook(self.listas_frame)
+        self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
+
+        style = ttk.Style()
+        style.configure("TNotebook.Tab", padding=[0, 0], font=('Roboto', 14, 'bold'))
+
+        self.treeviews = {}
+
+        tipos = ["cliente", "funcionario", "fornecedor"]
+        titulos = ["Clientes", "Funcionários", "Fornecedores"]
+
+        for tipo, titulo in zip(tipos, titulos):
+            frame_aba = ctk.CTkFrame(self.notebook, fg_color="white")
+            self.notebook.add(frame_aba, text=titulo)
+
+            container = ctk.CTkFrame(frame_aba, fg_color="white")
+            container.pack(fill="both", expand=True, padx=10, pady=10)
+            container.grid_rowconfigure(0, weight=1)
+            container.grid_columnconfigure(0, weight=1)
+
+            if tipo == "cliente":
+                colunas = ["Nome", "CPF", "Data Nasc.", "Idade", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
+            elif tipo == "funcionario":
+                colunas = ["Nome", "CPF", "Data Nasc.", "Idade", "Departamento", "Setor", "Data Admissão", "Email"]
+            else:
+                colunas = ["Nome", "CNPJ", "Tipo Fornecimento", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
+
+            style = ttk.Style()
+            style.theme_use("clam")
+            style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
+            style.configure("Treeview", 
+                            font=("Segoe UI", 10), 
+                            background="white", 
+                            fieldbackground="white", 
+                            foreground="black",
+                            rowheight=25)
+            
+            style.map("Treeview",
+                    background=[("selected", "#e6f2ff")],
+                    foreground=[("selected", "black")])
+
+            treeview = ttk.Treeview(container, columns=colunas, show="headings", height=15, style="Treeview")
+            
+            for col in colunas:
+                treeview.heading(col, text=col)
+                treeview.column(col, width=100, anchor="w")
+
+            if tipo == "cliente":
+                treeview.column("Nome", width=150)
+                treeview.column("Email", width=150)
+                treeview.column("Endereço", width=150)
+            elif tipo == "funcionario":
+                treeview.column("Nome", width=150)
+                treeview.column("Departamento", width=120)
+                treeview.column("Setor", width=120)
+            else:
+                treeview.column("Nome", width=150)
+                treeview.column("Tipo Fornecimento", width=150)
+                treeview.column("Email", width=150)
+
+            vsb = ttk.Scrollbar(container, orient="vertical", command=treeview.yview)
+            treeview.configure(yscrollcommand=vsb.set)
+            
+            hsb = ttk.Scrollbar(container, orient="horizontal", command=treeview.xview)
+            treeview.configure(xscrollcommand=hsb.set)
+
+            treeview.grid(row=0, column=0, sticky="nsew")
+            vsb.grid(row=0, column=1, sticky="ns")
+            hsb.grid(row=1, column=0, sticky="ew")
+
+            self.treeviews[tipo] = treeview
+
+            treeview.bind('<<TreeviewSelect>>', lambda e, t=tipo: self.on_treeview_select(e, t))
+            treeview.bind('<Double-1>', lambda e, t=tipo: self.on_double_click(e, t))
+
+            treeview.tag_configure("selected", background="#e6f2ff", foreground="black")
 
     def menu_import_export_selecionado(self, opcao):
         if opcao == "Importar":
@@ -1750,7 +1815,6 @@ class TelaPrincipal(ctk.CTkToplevel):
             messagebox.showerror("Erro", f"Não foi possível abrir a agenda:\n{str(e)}")
 
     def menu_selecionado(self, opcao):
-        # Implementar ações para cada opção do menu
         if opcao == "⚙️ Configurações":
             self.alterar_informacoes_usuario()
 
@@ -1800,7 +1864,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         self.atualizar_lista()
 
     def abrir_editar(self):
-        # Verificar se há uma seleção
         if not hasattr(self, 'treeview_selecionada') or not self.treeview_selecionada.selection():
             messagebox.showwarning("Aviso", "Selecione um registro para editar.")
             return
@@ -1809,11 +1872,10 @@ class TelaPrincipal(ctk.CTkToplevel):
         valores = self.treeview_selecionada.item(selected_item, 'values')
         tipo = self.tipo_selecionado
 
-        # Obter o documento (CPF ou CNPJ) para buscar a pessoa
         if tipo == "fornecedor":
-            documento = valores[1]  # CNPJ
+            documento = valores[1]
         else:
-            documento = valores[1]  # CPF
+            documento = valores[1]
 
         pessoa, _ = buscar_pessoa_por_documento(documento)
         if pessoa:
@@ -1834,9 +1896,9 @@ class TelaPrincipal(ctk.CTkToplevel):
         tipo = self.tipo_selecionado
 
         if tipo == "fornecedor":
-            documento = valores[1]  # CNPJ
+            documento = valores[1]
         else:
-            documento = valores[1]  # CPF
+            documento = valores[1]
 
         pessoa, _ = buscar_pessoa_por_documento(documento)
         if pessoa:
@@ -1865,7 +1927,6 @@ class TelaPrincipal(ctk.CTkToplevel):
         dados_corretos_usuario = next((u for u in users if u["usuario"] == self.user["usuario"]), None)
         if dados_corretos_usuario:
             self.user = dados_corretos_usuario
-            # Recriar o header para atualizar as informações
             for widget in self.grid_slaves():
                 if widget.grid_info()["row"] == 0:
                     widget.destroy()
@@ -1876,94 +1937,20 @@ class TelaPrincipal(ctk.CTkToplevel):
             self.destroy()
 
     def atualizar_lista(self):
-        # Limpar frames existentes
-        for widget in self.listas_frame.winfo_children():
-            widget.destroy()
+        # Se as treeviews ainda não foram criadas, não fazer nada
+        if not hasattr(self, 'treeviews'):
+            return
 
-        # Criar abas para os diferentes tipos de pessoas
-        notebook = ttk.Notebook(self.listas_frame)
-        notebook.pack(fill="both", expand=True, padx=5, pady=5)
-
-        # Dicionário para armazenar as treeviews
-        self.treeviews = {}
-
-        # Para cada tipo de pessoa, criar uma aba com uma treeview
-        tipos = ["cliente", "funcionario", "fornecedor"]
-        titulos = ["Clientes", "Funcionários", "Fornecedores"]
-
-        for tipo, titulo in zip(tipos, titulos):
-            # Frame para a aba
-            frame_aba = ctk.CTkFrame(notebook, fg_color="white")
-            notebook.add(frame_aba, text=titulo)
-
-            # Treeview com barra de rolagem
-            frame_tree = ctk.CTkFrame(frame_aba, fg_color="white")
-            frame_tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-            # Definir colunas com base no tipo
-            if tipo == "cliente":
-                colunas = ["Nome", "CPF", "Data Nasc.", "Idade", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
-            elif tipo == "funcionario":
-                colunas = ["Nome", "CPF", "Data Nasc.", "Idade", "Departamento", "Setor", "Data Admissão", "Email"]
-            else:  # fornecedor
-                colunas = ["Nome", "CNPJ", "Tipo Fornecimento", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
-
-            # Configurar estilo da treeview
-            style = ttk.Style()
-            style.theme_use("clam")
-            style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
-            style.configure("Treeview", font=("Segoe UI", 10), background="white", fieldbackground="white", foreground="black")
-
-            # Criar treeview
-            treeview = ttk.Treeview(frame_tree, columns=colunas, show="headings", height=15)
-            
-            # Configurar cabeçalhos
-            for col in colunas:
-                treeview.heading(col, text=col)
-                treeview.column(col, width=100, anchor="w")
-
-            # Ajustar larguras específicas
-            if tipo == "cliente":
-                treeview.column("Nome", width=150)
-                treeview.column("Email", width=150)
-                treeview.column("Endereço", width=150)
-            elif tipo == "funcionario":
-                treeview.column("Nome", width=150)
-                treeview.column("Departamento", width=120)
-                treeview.column("Setor", width=120)
-            else:  # fornecedor
-                treeview.column("Nome", width=150)
-                treeview.column("Tipo Fornecimento", width=150)
-                treeview.column("Email", width=150)
-
-            # Barra de rolagem
-            scrollbar = ttk.Scrollbar(frame_tree, orient="vertical", command=treeview.yview)
-            treeview.configure(yscrollcommand=scrollbar.set)
-            
-            treeview.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
-
-            # Preencher com dados
+        for tipo, treeview in self.treeviews.items():
             self.preencher_treeview(tipo, treeview)
-            
-            # Armazenar a treeview no dicionário
-            self.treeviews[tipo] = treeview
-
-            # Vincular evento de seleção
-            treeview.bind('<<TreeviewSelect>>', lambda e, t=tipo: self.on_treeview_select(e, t))
-            # Vincular evento de duplo clique
-            treeview.bind('<Double-1>', lambda e, t=tipo: self.on_double_click(e, t))
 
     def preencher_treeview(self, tipo, treeview):
-        # Limpar treeview
         for item in treeview.get_children():
             treeview.delete(item)
         
-        # Carregar dados
         arquivo = ARQUIVO_PESSOAS[tipo]
         pessoas = carregar_dados_banco(arquivo)
         
-        # Adicionar dados à treeview
         for pessoa in pessoas:
             if tipo == "cliente":
                 valores = [
@@ -1990,7 +1977,7 @@ class TelaPrincipal(ctk.CTkToplevel):
                     tratar_valor_vazio(pessoa.get("data_admissao", "")),
                     tratar_valor_vazio(pessoa.get("email", ""))
                 ]
-            else:  # fornecedor
+            else:
                 valores = [
                     tratar_valor_vazio(pessoa.get("nome", "")),
                     tratar_valor_vazio(pessoa.get("cnpj", "")),
@@ -2010,23 +1997,18 @@ class TelaPrincipal(ctk.CTkToplevel):
         treeview = self.treeviews[tipo]
         selected = treeview.selection()
         if selected:
-            # Habilitar botões de ação quando um item é selecionado
             self.btn_editar.configure(state="normal")
             self.btn_excluir.configure(state="normal")
-            # Armazenar a treeview e o tipo atualmente selecionados
             self.treeview_selecionada = treeview
             self.tipo_selecionado = tipo
         else:
-            # Desabilitar botões quando nenhum item está selecionado
             self.btn_editar.configure(state="disabled")
             self.btn_excluir.configure(state="disabled")
 
     def on_double_click(self, event, tipo):
-        # Obter a treeview clicada
         treeview = self.treeviews[tipo]
         selected = treeview.selection()
         if selected:
-            # Simular clique no botão editar
             self.abrir_editar()
 
 if __name__ == "__main__":

@@ -29,20 +29,6 @@
     },
     {
         "tipo": "cliente",
-        "nome": "Mariana Costa",
-        "cpf": "807.514.360-33",
-        "data_nasc": "28/11/2008",
-        "cep": "N/A",
-        "endereco": "N/A",
-        "numero": "N/A",
-        "bairro": "N/A",
-        "cidade": "N/A",
-        "estado": "N/A",
-        "email": "maria@gmail.com",
-        "idade": 16
-    },
-    {
-        "tipo": "cliente",
         "nome": "Rafael Oliveira",
         "cpf": "419.087.320-72",
         "data_nasc": "05/06/1984",
@@ -96,5 +82,18 @@
         "estado": "N/A",
         "email": "camila@gmail.com",
         "idade": 10
+    },
+    {
+        "nome": "Mariana Costa",
+        "cpf": "807.514.360-33",
+        "data_nasc": "28/11/2008",
+        "cep": "89230783",
+        "endereco": "Rua Elzitraud Scholz",
+        "numero": "N/A",
+        "bairro": "Adhemar Garcia",
+        "cidade": "Joinville",
+        "estado": "SC",
+        "tipo": "cliente",
+        "idade": 16
     }
 ]

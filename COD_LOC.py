@@ -118,6 +118,15 @@ class App(ctk.CTk):
     def maximizar_window(self):
         self.state('zoomed')
     
+    def limpar_area_conteudo(self):
+        """Limpar área de conteúdo de forma segura"""
+        for widget in self.area_conteudo.winfo_children():
+            try:
+                widget.destroy()
+            except:
+                pass
+        self.area_conteudo.update_idletasks()
+    
     def abrir_tela_produto(self, produto=None):
         if hasattr(self, 'tela_produto') and self.tela_produto is not None and self.tela_produto.winfo_exists():
             self.tela_produto.lift()
@@ -448,128 +457,148 @@ class App(ctk.CTk):
             self.abrir_agenda()
             return
         elif option == "📦Produtos":
+            self.limpar_area_conteudo()
             self.abrir_tela_produtos()
             return
 
-        for widget in self.area_conteudo.winfo_children():
-            widget.destroy()
+        self.limpar_area_conteudo()
 
     def abrir_tela_produtos(self):
+        # Remover marca d'água de forma mais segura
         if hasattr(self, 'label_marcadagua'):
             self.label_marcadagua.place_forget()
-
-        for widget in self.area_conteudo.winfo_children():
-            widget.destroy()
-
+        
+        # Limpar área de conteúdo de forma mais eficiente
+        self.limpar_area_conteudo()
+        
+        # Criar frame principal
         frame_produtos = ctk.CTkFrame(self.area_conteudo, fg_color="white")
         frame_produtos.pack(fill="both", expand=True, padx=0, pady=0)
+        
+        # Adicionar pequeno delay para garantir que o frame foi renderizado
+        self.after(50, lambda: self._construir_conteudo_produtos(frame_produtos))
 
-        # NOTEBOOK PARA AS ABAS (AGORA ESTÁ NO TOPO)
-        self.notebook_produtos = ttk.Notebook(frame_produtos)
-        self.notebook_produtos.pack(fill="both", expand=True, padx=10, pady=10)
+    def _construir_conteudo_produtos(self, frame_pai):
+        """Construir o conteúdo dos produtos após o frame principal estar renderizado"""
+        try:
+            # NOTEBOOK PARA AS ABAS
+            self.notebook_produtos = ttk.Notebook(frame_pai)
+            self.notebook_produtos.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Frame para a aba de Produtos
-        self.frame_aba_produtos = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
-        self.notebook_produtos.add(self.frame_aba_produtos, text="Produtos")
+            # Frame para a aba de Produtos
+            self.frame_aba_produtos = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
+            self.notebook_produtos.add(self.frame_aba_produtos, text="Produtos")
 
-        # Frame para a aba de Séries
-        self.frame_aba_series = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
-        self.notebook_produtos.add(self.frame_aba_series, text="Séries")
+            # Frame para a aba de Séries
+            self.frame_aba_series = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
+            self.notebook_produtos.add(self.frame_aba_series, text="Séries")
 
-        # Aumentar o tamanho das abas
-        style = ttk.Style()
-        style.configure("TNotebook.Tab", padding=[20, 8], font=('Helvetica', 12, 'bold'))
+            style = ttk.Style()
+            style.configure("TNotebook.Tab", padding=[0, 0], font=('Roboto', 14, 'bold'))
 
-        # Inicialmente desabilitar a aba de séries
-        self.notebook_produtos.tab(1, state="disabled")
+            # Inicialmente desabilitar a aba de séries
+            self.notebook_produtos.tab(1, state="disabled")
 
-        # FRAME DE BOTÕES (AGORA ABAIXO DO NOTEBOOK)
-        frame_botoes = ctk.CTkFrame(frame_produtos, height=50, fg_color="#f0f0f0", corner_radius=0)
-        frame_botoes.pack(fill="x", pady=(0, 10))
-        frame_botoes.pack_propagate(False)
+            # FRAME DE BOTÕES (AGORA ABAIXO DO NOTEBOOK)
+            frame_botoes = ctk.CTkFrame(frame_pai, height=50, fg_color="#f0f0f0", corner_radius=0)
+            frame_botoes.pack(fill="x", pady=(0, 10))
+            frame_botoes.pack_propagate(False)
 
-        btn_novo = ctk.CTkButton(
-            frame_botoes,
-            text="Novo",
-            width=80,
-            height=30,
-            fg_color="#4CAF50",
-            hover_color="#54C057",
-            border_color="#429647",
-            border_width=2,
-            text_color="white",
-            command=self.abrir_tela_produto
-        )
-        btn_novo.pack(side="left", padx=(10, 5), pady=10)
+            btn_novo = ctk.CTkButton(
+                frame_botoes,
+                text="Novo",
+                width=80,
+                height=30,
+                fg_color="#4CAF50",
+                hover_color="#54C057",
+                border_color="#429647",
+                border_width=2,
+                text_color="white",
+                command=self.abrir_tela_produto
+            )
+            btn_novo.pack(side="left", padx=(10, 5), pady=10)
 
-        btn_editar = ctk.CTkButton(
-            frame_botoes,
-            text="Editar",
-            width=80,
-            height=30,
-            fg_color="#2196F3",
-            hover_color="#46A4F1",
-            border_color="#0b7dda",
-            border_width=2,
-            text_color="white",
-            command=self.editar_produto
-        )
-        btn_editar.pack(side="left", padx=5, pady=10)
+            btn_editar = ctk.CTkButton(
+                frame_botoes,
+                text="Editar",
+                width=80,
+                height=30,
+                fg_color="#2196F3",
+                hover_color="#46A4F1",
+                border_color="#0b7dda",
+                border_width=2,
+                text_color="white",
+                command=self.editar_produto
+            )
+            btn_editar.pack(side="left", padx=5, pady=10)
 
-        btn_excluir = ctk.CTkButton(
-            frame_botoes,
-            text="Excluir",
-            width=80,
-            height=30,
-            fg_color="#f44336",
-            hover_color="#da190b",
-            border_color="#da190b",
-            border_width=2,
-            text_color="white",
-            command=self.excluir_produto
-        )
-        btn_excluir.pack(side="left", padx=5, pady=10)
+            btn_excluir = ctk.CTkButton(
+                frame_botoes,
+                text="Excluir",
+                width=80,
+                height=30,
+                fg_color="#f44336",
+                hover_color="#da190b",
+                border_color="#da190b",
+                border_width=2,
+                text_color="white",
+                command=self.excluir_produto
+            )
+            btn_excluir.pack(side="left", padx=5, pady=10)
 
-        mais_opcoes = ctk.CTkOptionMenu(
-            frame_botoes,
-            values=[
-                "⬆Exportar dados", 
-                "💾Importar dados",
-                "📄Relatório"
-            ],
-            width=120,
-            height=30,
-            font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
-            fg_color="#9E9E9E",
-            button_color="#9E9E9E",
-            button_hover_color="#9E9E9E",
-            dropdown_fg_color="#ffffff",
-            dropdown_text_color="black",
-            dropdown_hover_color="#f0f0f0",
-        )
-        mais_opcoes.set("Mais opções")
-        mais_opcoes.pack(side="left", padx=5, pady=10)
+            mais_opcoes = ctk.CTkOptionMenu(
+                frame_botoes,
+                values=[
+                    "⬆Exportar dados", 
+                    "💾Importar dados",
+                    "📄Relatório"
+                ],
+                width=120,
+                height=30,
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
+                fg_color="#9E9E9E",
+                button_color="#9E9E9E",
+                button_hover_color="#9E9E9E",
+                dropdown_fg_color="#ffffff",
+                dropdown_text_color="black",
+                dropdown_hover_color="#f0f0f0",
+            )
+            mais_opcoes.set("Mais opções")
+            mais_opcoes.pack(side="left", padx=5, pady=10)
 
-        espaco_vazio = ctk.CTkFrame(frame_botoes, fg_color="transparent")
-        espaco_vazio.pack(side="left", fill="x", expand=True)
+            espaco_vazio = ctk.CTkFrame(frame_botoes, fg_color="transparent")
+            espaco_vazio.pack(side="left", fill="x", expand=True)
 
-        btn_sair = ctk.CTkButton(
-            frame_botoes,
-            text="Sair",
-            width=80,
-            height=30,
-            fg_color="#f44336",
-            hover_color="#da190b",
-            border_color="#da190b",
-            border_width=2,
-            text_color="white",
-            command=self.fechar_tela_produtos
-        )
-        btn_sair.pack(side="right", padx=10, pady=10)
+            btn_sair = ctk.CTkButton(
+                frame_botoes,
+                text="Sair",
+                width=80,
+                height=30,
+                fg_color="#f44336",
+                hover_color="#da190b",
+                border_color="#da190b",
+                border_width=2,
+                text_color="white",
+                command=self.fechar_tela_produtos
+            )
+            btn_sair.pack(side="right", padx=10, pady=10)
 
-        # Construir o conteúdo das abas
-        self.construir_aba_produtos()
-        self.construir_aba_series()
+            # Construir o conteúdo das abas com pequeno delay
+            self.after(100, self._finalizar_construcao_produtos)
+            
+        except Exception as e:
+            print(f"Erro ao construir tela de produtos: {e}")
+
+    def _finalizar_construcao_produtos(self):
+        """Finalizar a construção após tudo estar preparado"""
+        try:
+            self.construir_aba_produtos()
+            self.construir_aba_series()
+            
+            # Forçar atualização final
+            self.update_idletasks()
+        except Exception as e:
+            print(f"Erro ao finalizar construção: {e}")
 
     def construir_aba_produtos(self):
         frame_principal = ctk.CTkFrame(self.frame_aba_produtos, fg_color="white")
@@ -874,9 +903,14 @@ class App(ctk.CTk):
                     break
 
     def fechar_tela_produtos(self):
-        for widget in self.area_conteudo.winfo_children():
-            widget.destroy()
+        # Limpar de forma mais gradual
+        self.limpar_area_conteudo()
         
+        # Restaurar marca d'água com pequeno delay
+        self.after(100, self._restaurar_marca_dagua)
+
+    def _restaurar_marca_dagua(self):
+        """Restaurar marca d'água de forma controlada"""
         if hasattr(self, 'label_marcadagua') and self.marcadagua_ctk_image:
             self.label_marcadagua.place(relx=0.5, rely=0.5, anchor="center")
     
@@ -1195,6 +1229,7 @@ class App(ctk.CTk):
             ("👤 Administração", [
                 "👤Usuário",
                 "👥Grupo de Usuários",
+                "🏢Unidades",
                 "📄Relatórios"
             ]),
             ("🕒 Auditoria", [
@@ -1205,11 +1240,17 @@ class App(ctk.CTk):
                 "👤Cliente",
                 "👤Funcionário",
                 "👤Fornecedor",
+                "👤Vendedor",
                 "📄Relatórios"
             ]),
             ("⚙️ Configurações", [
                 "👤Informações pessoais",
                 "📡Configurações de APIs",
+                "⚙️Parâmetros do Sistema",
+                "⬇️Importar/Exportar Dados",
+                "🖼️Logo",
+                "🖼️Marca d'água",
+                "🖼️Banner",
                 "📅Agenda"
             ]),
         ]
@@ -1312,10 +1353,12 @@ class App(ctk.CTk):
         self.frame_marcdagua.grid_rowconfigure(0, weight=1)
         self.frame_marcdagua.grid_columnconfigure(0, weight=1)
 
-        self.area_conteudo = ctk.CTkFrame(self.frame_marcdagua, fg_color="white")
+        # Área de conteúdo transparente e no topo
+        self.area_conteudo = ctk.CTkFrame(self.frame_marcdagua, fg_color="transparent")  # Transparente
         self.area_conteudo.grid(row=0, column=0, sticky="nsew")
         self.area_conteudo.grid_rowconfigure(0, weight=1)
         self.area_conteudo.grid_columnconfigure(0, weight=1)
+        self.area_conteudo.lift()  # Trazer para frente
 
         if self.marcadagua_ctk_image:
             self.label_marcadagua = ctk.CTkLabel(
