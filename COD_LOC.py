@@ -478,12 +478,23 @@ class App(ctk.CTk):
         # Adicionar pequeno delay para garantir que o frame foi renderizado
         self.after(50, lambda: self._construir_conteudo_produtos(frame_produtos))
 
+    def _aplicar_estilo_notebook(self):
+        """Aplicar estilo consistentemente ao notebook"""
+        try:
+            style = ttk.Style()
+            style.configure("TNotebook.Tab", padding=[0, 0], font=('Roboto', 14, 'bold'))
+        except Exception as e:
+            print(f"Erro ao aplicar estilo do notebook: {e}")
+
     def _construir_conteudo_produtos(self, frame_pai):
         """Construir o conteúdo dos produtos após o frame principal estar renderizado"""
         try:
             # NOTEBOOK PARA AS ABAS
             self.notebook_produtos = ttk.Notebook(frame_pai)
             self.notebook_produtos.pack(fill="both", expand=True, padx=10, pady=10)
+
+            # APLICAR ESTILO CONSISTENTEMENTE
+            self._aplicar_estilo_notebook()
 
             # Frame para a aba de Produtos
             self.frame_aba_produtos = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
@@ -492,9 +503,6 @@ class App(ctk.CTk):
             # Frame para a aba de Séries
             self.frame_aba_series = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
             self.notebook_produtos.add(self.frame_aba_series, text="Séries")
-
-            style = ttk.Style()
-            style.configure("TNotebook.Tab", padding=[0, 0], font=('Roboto', 14, 'bold'))
 
             # Inicialmente desabilitar a aba de séries
             self.notebook_produtos.tab(1, state="disabled")
@@ -731,6 +739,9 @@ class App(ctk.CTk):
                     break
 
     def construir_aba_series(self):
+        # REAPLICAR ESTILO ANTES DE CONSTRUIR
+        self._aplicar_estilo_notebook()
+        
         for widget in self.frame_aba_series.winfo_children():
             widget.destroy()
             
@@ -891,6 +902,8 @@ class App(ctk.CTk):
                     if produto["serie"] == "Sim":
                         # Habilitar a aba de séries
                         self.notebook_produtos.tab(1, state="normal")
+                        # REAPLICAR ESTILO
+                        self._aplicar_estilo_notebook()
                         self.produto_selecionado = codigo
                         self.produto_selecionado_info = produto
                         # Atualizar a aba de séries
