@@ -76,24 +76,26 @@ class TelaProduto(ctk.CTkToplevel):
         
         botao_cancelar = ctk.CTkButton(
             frame_botoes,
-            text="Cancelar",
+            text="❌Cancelar",
             width=80,
             height=30,
             fg_color="#f44336",
             hover_color="#da190b",
             text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji" ,size=12, weight="bold"),
             command=self.destroy
         )
         botao_cancelar.pack(side="right", padx=5)
         
         botao_salvar = ctk.CTkButton(
             frame_botoes,
-            text="Salvar",
+            text="💾Salvar",
             width=80,
             height=30,
             fg_color="#4CAF50",
             hover_color="#45a049",
             text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji" ,size=12, weight="bold"),
             command=self.salvar_produto
         )
         botao_salvar.pack(side="right", padx=5)

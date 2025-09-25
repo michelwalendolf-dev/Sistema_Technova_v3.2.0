@@ -1677,22 +1677,22 @@ class TelaPrincipal(ctk.CTkToplevel):
         botoes_frame.grid_columnconfigure(4, weight=1)
 
         botoes_acoes = [
-            ("Cadastrar", "#4CAF50", self.abrir_cadastro_menu),
-            ("Editar", "#047194", self.abrir_editar),
-            ("Excluir", "#e74c3c", self.abrir_excluir)
+            ("➕Cadastrar", "#4CAF50", self.abrir_cadastro_menu),
+            ("✏️Editar", "#047194", self.abrir_editar),
+            ("🗑️Excluir", "#e74c3c", self.abrir_excluir)
         ]
 
         for i, (texto, cor, comando) in enumerate(botoes_acoes):
             borda_botoes = {
-                "Cadastrar": "#2E7D32",
-                "Editar": "#034b66",
-                "Excluir": "#c0392b"
+                "➕Cadastrar": "#2E7D32",
+                "✏️Editar": "#034b66",
+                "🗑️Excluir": "#c0392b"
             }[texto]
 
             hover_botoes = {
-                "Cadastrar": "#66BB6A",
-                "Editar": "#0490c7",
-                "Excluir": "#ff6b5c"
+                "➕Cadastrar": "#66BB6A",
+                "✏️Editar": "#0490c7",
+                "🗑️Excluir": "#ff6b5c"
             }[texto]
 
             btn = ctk.CTkButton(
@@ -1702,16 +1702,16 @@ class TelaPrincipal(ctk.CTkToplevel):
                 fg_color=cor,
                 hover_color=hover_botoes,
                 text_color="#fff",
-                font=("Roboto", 14, "bold"),
+                font=("Segoe UI Emoji", 14, "bold"),
                 height=35,
                 width=100,
                 border_width=2,
                 border_color=borda_botoes
             )
             btn.grid(row=0, column=i+1, padx=5, pady=5)
-            if texto == "Editar":
+            if texto == "✏️Editar":
                 self.btn_editar = btn
-            elif texto == "Excluir":
+            elif texto == "🗑️Excluir":
                 self.btn_excluir = btn
 
         self.btn_editar.configure(state="disabled")
@@ -1722,11 +1722,35 @@ class TelaPrincipal(ctk.CTkToplevel):
         if hasattr(self, 'notebook'):
             return
 
-        self.notebook = ttk.Notebook(self.listas_frame)
-        self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
-
+        # Criar e configurar o estilo ANTES de criar o notebook
         style = ttk.Style()
-        style.configure("TNotebook.Tab", padding=[0, 0], font=('Roboto', 14, 'bold'))
+        
+        # Configurar o estilo principal do notebook
+        style.configure("TNotebook", 
+                    background="#ffffff",
+                    borderwidth=0,
+                    tabmargins=[0, 0, 0, 2])
+        
+        # Configurar o estilo das abas - ABA SELECIONADA MAIOR
+        style.configure("TNotebook.Tab",
+                    padding=[13, 4],  # Padding MENOR para abas não selecionadas
+                    font=('Roboto', 12, 'bold'),
+                    background="#f0f0f0",
+                    foreground="#333333",
+                    focuscolor=style.lookup("TNotebook.Tab", "background"))
+        
+        # Mapear estados - ABA SELECIONADA COM MAIOR PADDING
+        style.map("TNotebook.Tab",
+                background=[("selected", "#ffffff"),
+                            ("active", "#e6e6e6")],
+                foreground=[("selected", "black"),
+                            ("active", "#333333")],
+                padding=[("selected", [18, 6]),  # Padding MAIOR quando selecionada
+                        ("active", [13, 4]),
+                        ("!selected", [13, 4])])  # Padding menor quando não selecionada
+
+        self.notebook = ttk.Notebook(self.listas_frame, style="TNotebook")
+        self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
 
         self.treeviews = {}
 
@@ -1749,19 +1773,20 @@ class TelaPrincipal(ctk.CTkToplevel):
             else:
                 colunas = ["Nome", "CNPJ", "Tipo Fornecimento", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
 
-            style = ttk.Style()
-            style.theme_use("clam")
-            style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
-            style.configure("Treeview", 
-                            font=("Segoe UI", 10), 
-                            background="white", 
-                            fieldbackground="white", 
-                            foreground="black",
-                            rowheight=25)
+            # Configurar estilo da Treeview
+            tree_style = ttk.Style()
+            tree_style.theme_use("clam")
+            tree_style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
+            tree_style.configure("Treeview", 
+                                font=("Segoe UI", 10), 
+                                background="white", 
+                                fieldbackground="white", 
+                                foreground="black",
+                                rowheight=25)
             
-            style.map("Treeview",
-                    background=[("selected", "#e6f2ff")],
-                    foreground=[("selected", "black")])
+            tree_style.map("Treeview",
+                          background=[("selected", "#e6f2ff")],
+                          foreground=[("selected", "black")])
 
             treeview = ttk.Treeview(container, columns=colunas, show="headings", height=15, style="Treeview")
             
@@ -1798,6 +1823,35 @@ class TelaPrincipal(ctk.CTkToplevel):
             treeview.bind('<Double-1>', lambda e, t=tipo: self.on_double_click(e, t))
 
             treeview.tag_configure("selected", background="#e6f2ff", foreground="black")
+
+        # Iniciar a verificação periódica do estilo
+        self.aplicar_estilo_persistente()
+
+    def aplicar_estilo_persistente(self):
+        """Aplicar e manter o estilo das abas periodicamente para evitar reversão"""
+        try:
+            # Re-aplicar o estilo a cada 3 segundos
+            style = ttk.Style()
+            style.configure("TNotebook.Tab",
+                           padding=[15, 6],  # Padding padrão menor
+                           font=('Roboto', 14, 'bold'),
+                           background="#f0f0f0",
+                           foreground="#333333")
+            
+            # Mapear para aba selecionada ter padding maior
+            style.map("TNotebook.Tab",
+                     background=[("selected", "#ffffff"),
+                                ("active", "#e6e6e6")],
+                     foreground=[("selected", "black"),
+                                ("active", "#333333")],
+                     padding=[("selected", [20, 8]),  # MAIOR quando selecionada
+                             ("active", [15, 6]),
+                             ("!selected", [15, 6])])  # MENOR quando não selecionada
+        except Exception as e:
+            print(f"Estilo não pôde ser reaplicado: {e}")
+        
+        # Agendar próxima verificação
+        self.after(3000, self.aplicar_estilo_persistente)
 
     def menu_import_export_selecionado(self, opcao):
         if opcao == "Importar":
