@@ -34,16 +34,18 @@ def tratar_valor_vazio(valor):
         return "N/A"
     return valor
 
+def formatar_valor_exibicao(valor):
+    valor_tratado = tratar_valor_vazio(valor)
+    if valor_tratado == "N/A":
+        return ""
+    return str(valor_tratado)
+
 def carregar_dados_banco(nome_arquivo):
     if not os.path.exists(nome_arquivo):
         with open(nome_arquivo, "w") as f:
             json.dump([], f)
     with open(nome_arquivo, "r") as f:
-        dados = json.load(f)
-        for item in dados:
-            for chave, valor in item.items():
-                item[chave] = tratar_valor_vazio(valor)
-        return dados
+        return json.load(f)
 
 def salvar_dados_banco(nome_arquivo, data):
     dados_tratados = []
@@ -84,6 +86,244 @@ def buscar_pessoa_por_documento(documento):
             if pessoa.get("cpf") == documento or pessoa.get("cnpj") == documento:
                 return pessoa, tipo
     return None, None
+
+class FilteredTreeview(ctk.CTkFrame):
+    def __init__(self, parent, columns, tipo, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.tipo = tipo
+        self.columns = columns
+        self.all_data = []
+        
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        
+        self.filter_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.filter_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        self.filter_frame.grid_columnconfigure(0, weight=1)
+        
+        self.filter_button = ctk.CTkButton(
+            self.filter_frame,
+            text="Filtrar por:",
+            command=self.toggle_filter_fields,
+            fg_color="#047194",
+            hover_color="#008ab6",
+            width=100,
+            height=25
+        )
+        self.filter_button.grid(row=0, column=0, sticky="w", padx=(0, 10))
+        
+        self.filter_fields_frame = ctk.CTkFrame(self.filter_frame, fg_color="transparent")
+        self.filter_fields_frame.grid(row=1, column=0, sticky="ew", pady=(5, 0))
+        
+        for i in range(len(columns)):
+            self.filter_fields_frame.grid_columnconfigure(i, weight=1)
+        
+        self.filter_vars = {}
+        self.filter_entries = {}
+        
+        self.create_filter_fields()
+        
+        self.filter_fields_visible = False
+        self.filter_fields_frame.grid_remove()
+        
+        self.tree_frame = ctk.CTkFrame(self)
+        self.tree_frame.grid(row=1, column=0, sticky="nsew")
+        self.tree_frame.grid_rowconfigure(0, weight=1)
+        self.tree_frame.grid_columnconfigure(0, weight=1)
+        
+        self.treeview = ttk.Treeview(self.tree_frame, columns=columns, show="headings", height=15)
+        
+        self.vsb = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.treeview.yview)
+        self.hsb = ttk.Scrollbar(self.tree_frame, orient="horizontal", command=self.treeview.xview)
+        self.treeview.configure(yscrollcommand=self.vsb.set, xscrollcommand=self.hsb.set)
+        
+        self.treeview.grid(row=0, column=0, sticky="nsew")
+        self.vsb.grid(row=0, column=1, sticky="ns")
+        self.hsb.grid(row=1, column=0, sticky="ew")
+        
+        self.setup_columns()
+        
+    def create_filter_fields(self):
+        total_columns = len(self.columns)
+        field_width = max(80, 400 // total_columns)
+        
+        for i, col in enumerate(self.columns):
+            field_frame = ctk.CTkFrame(self.filter_fields_frame, fg_color="transparent")
+            field_frame.grid(row=0, column=i, sticky="ew", padx=2)
+            field_frame.grid_columnconfigure(1, weight=1)
+            
+            input_container = ctk.CTkFrame(field_frame, fg_color="transparent", height=28)
+            input_container.pack(fill="x", expand=True)
+            input_container.grid_columnconfigure(1, weight=1)
+            
+            filter_icon = ctk.CTkLabel(
+                input_container,
+                text="▽",
+                width=20,
+                font=("Arial", 12),
+                text_color="#666666"
+            )
+            filter_icon.grid(row=0, column=0, padx=(5, 0), sticky="w")
+            
+            self.filter_vars[col] = ctk.StringVar()
+            entry = ctk.CTkEntry(
+                input_container,
+                textvariable=self.filter_vars[col],
+                placeholder_text=col,
+                width=field_width - 30,
+                height=25,
+                border_width=1,
+                corner_radius=4
+            )
+            entry.grid(row=0, column=1, sticky="ew", padx=(2, 5))
+            
+            self.filter_vars[col].trace("w", self.on_filter_change)
+            
+            self.filter_entries[col] = entry
+    
+    def toggle_filter_fields(self):
+        if self.filter_fields_visible:
+            self.filter_fields_frame.grid_remove()
+            self.filter_fields_visible = False
+        else:
+            self.filter_fields_frame.grid()
+            self.filter_fields_visible = True
+    
+    def on_filter_change(self, *args):
+        self.filter_data()
+    
+    def filter_data(self):
+        if not self.all_data:
+            return
+            
+        filtered_data = []
+        
+        for row_data in self.all_data:
+            match = True
+            
+            for col in self.columns:
+                filter_value = self.filter_vars[col].get().lower().strip()
+                
+                if filter_value:
+                    key_map = {
+                        "Nome": "nome",
+                        "CPF": "cpf", 
+                        "CNPJ": "cnpj",
+                        "Data Nasc.": "data_nasc",
+                        "Idade": "idade",
+                        "Email": "email",
+                        "CEP": "cep",
+                        "Endereço": "endereco",
+                        "Número": "numero",
+                        "Bairro": "bairro",
+                        "Cidade": "cidade",
+                        "Estado": "estado",
+                        "Departamento": "departamento",
+                        "Setor": "setor",
+                        "Data Admissão": "data_admissao",
+                        "Tipo Fornecimento": "tipo_fornecimento"
+                    }
+                    
+                    key = key_map.get(col, col.lower())
+                    cell_value = str(row_data.get(key, "")).lower()
+                    
+                    if filter_value not in cell_value:
+                        match = False
+                        break
+            
+            if match:
+                filtered_data.append(row_data)
+        
+        self.display_data(filtered_data)
+    
+    def setup_columns(self):
+        column_configs = {
+            "cliente": {
+                "Nome": {"width": 150},
+                "CPF": {"width": 120},
+                "Data Nasc.": {"width": 100},
+                "Idade": {"width": 60},
+                "Email": {"width": 150},
+                "CEP": {"width": 90},
+                "Endereço": {"width": 150},
+                "Número": {"width": 70},
+                "Bairro": {"width": 100},
+                "Cidade": {"width": 100},
+                "Estado": {"width": 70}
+            },
+            "funcionario": {
+                "Nome": {"width": 150},
+                "CPF": {"width": 120},
+                "Data Nasc.": {"width": 100},
+                "Idade": {"width": 60},
+                "Departamento": {"width": 120},
+                "Setor": {"width": 120},
+                "Data Admissão": {"width": 100},
+                "Email": {"width": 150}
+            },
+            "fornecedor": {
+                "Nome": {"width": 150},
+                "CNPJ": {"width": 150},
+                "Tipo Fornecimento": {"width": 150},
+                "Email": {"width": 150},
+                "CEP": {"width": 90},
+                "Endereço": {"width": 150},
+                "Número": {"width": 70},
+                "Bairro": {"width": 100},
+                "Cidade": {"width": 100},
+                "Estado": {"width": 70}
+            }
+        }
+        
+        config = column_configs.get(self.tipo, {})
+        
+        for col in self.columns:
+            width = config.get(col, {}).get("width", 100)
+            self.treeview.heading(col, text=col)
+            self.treeview.column(col, width=width, anchor="w")
+    
+    def load_data(self, data):
+        self.all_data = data
+        self.filter_data()
+    
+    def display_data(self, data):
+        for item in self.treeview.get_children():
+            self.treeview.delete(item)
+        
+        for row_data in data:
+            values = []
+            for col in self.columns:
+                key_map = {
+                    "Nome": "nome",
+                    "CPF": "cpf", 
+                    "CNPJ": "cnpj",
+                    "Data Nasc.": "data_nasc",
+                    "Idade": "idade",
+                    "Email": "email",
+                    "CEP": "cep",
+                    "Endereço": "endereco",
+                    "Número": "numero",
+                    "Bairro": "bairro",
+                    "Cidade": "cidade",
+                    "Estado": "estado",
+                    "Departamento": "departamento",
+                    "Setor": "setor",
+                    "Data Admissão": "data_admissao",
+                    "Tipo Fornecimento": "tipo_fornecimento"
+                }
+                
+                key = key_map.get(col, col.lower())
+                values.append(formatar_valor_exibicao(row_data.get(key, "")))
+            self.treeview.insert("", "end", values=values)
+    
+    def bind(self, sequence, func):
+        self.treeview.bind(sequence, func)
+    
+    def selection(self):
+        return self.treeview.selection()
+    
+    def item(self, item, option=None):
+        return self.treeview.item(item, option)
 
 class TelaLogin(ctk.CTk):
     def __init__(self):
@@ -1324,9 +1564,7 @@ class TelaPrincipal(ctk.CTkToplevel):
         
         self.atualizar_relogio()
         
-        # Construir a estrutura das abas primeiro
         self.construir_abas()
-        # Depois preencher com os dados
         self.atualizar_lista()
 
     def criar_moldura_usuario(self, parent):
@@ -1718,44 +1956,53 @@ class TelaPrincipal(ctk.CTkToplevel):
         self.btn_excluir.configure(state="disabled")
 
     def construir_abas(self):
-        # Se o notebook já existe, não recriar
         if hasattr(self, 'notebook'):
             return
 
-        # Criar e configurar o estilo ANTES de criar o notebook
         style = ttk.Style()
         
-        # Configurar o estilo principal do notebook
         style.configure("TNotebook", 
                     background="#ffffff",
                     borderwidth=0,
                     tabmargins=[0, 0, 0, 2])
         
-        # Configurar o estilo das abas - ABA SELECIONADA MAIOR
         style.configure("TNotebook.Tab",
-                    padding=[13, 4],  # Padding MENOR para abas não selecionadas
+                    padding=[13, 4],
                     font=('Roboto', 12, 'bold'),
                     background="#f0f0f0",
                     foreground="#333333",
                     focuscolor=style.lookup("TNotebook.Tab", "background"))
         
-        # Mapear estados - ABA SELECIONADA COM MAIOR PADDING
         style.map("TNotebook.Tab",
                 background=[("selected", "#ffffff"),
                             ("active", "#e6e6e6")],
                 foreground=[("selected", "black"),
                             ("active", "#333333")],
-                padding=[("selected", [18, 6]),  # Padding MAIOR quando selecionada
+                padding=[("selected", [18, 6]),
                         ("active", [13, 4]),
-                        ("!selected", [13, 4])])  # Padding menor quando não selecionada
+                        ("!selected", [13, 4])])
 
         self.notebook = ttk.Notebook(self.listas_frame, style="TNotebook")
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
 
-        self.treeviews = {}
+        self.filtered_treeviews = {}
 
         tipos = ["cliente", "funcionario", "fornecedor"]
         titulos = ["Clientes", "Funcionários", "Fornecedores"]
+
+        tree_style = ttk.Style()
+        tree_style.theme_use("clam")
+        tree_style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
+        tree_style.configure("Treeview", 
+                            font=("Segoe UI", 10), 
+                            background="white", 
+                            fieldbackground="white", 
+                            foreground="black",
+                            rowheight=25)
+        
+        tree_style.map("Treeview",
+                      background=[("selected", "#e6f2ff")],
+                      foreground=[("selected", "black")])
 
         for tipo, titulo in zip(tipos, titulos):
             frame_aba = ctk.CTkFrame(self.notebook, fg_color="white")
@@ -1773,84 +2020,36 @@ class TelaPrincipal(ctk.CTkToplevel):
             else:
                 colunas = ["Nome", "CNPJ", "Tipo Fornecimento", "Email", "CEP", "Endereço", "Número", "Bairro", "Cidade", "Estado"]
 
-            # Configurar estilo da Treeview
-            tree_style = ttk.Style()
-            tree_style.theme_use("clam")
-            tree_style.configure("Treeview.Heading", font=("Roboto", 10, "bold"), background="#ebebeb")
-            tree_style.configure("Treeview", 
-                                font=("Segoe UI", 10), 
-                                background="white", 
-                                fieldbackground="white", 
-                                foreground="black",
-                                rowheight=25)
-            
-            tree_style.map("Treeview",
-                          background=[("selected", "#e6f2ff")],
-                          foreground=[("selected", "black")])
+            filtered_treeview = FilteredTreeview(container, colunas, tipo)
+            filtered_treeview.pack(fill="both", expand=True)
 
-            treeview = ttk.Treeview(container, columns=colunas, show="headings", height=15, style="Treeview")
-            
-            for col in colunas:
-                treeview.heading(col, text=col)
-                treeview.column(col, width=100, anchor="w")
+            self.filtered_treeviews[tipo] = filtered_treeview
 
-            if tipo == "cliente":
-                treeview.column("Nome", width=150)
-                treeview.column("Email", width=150)
-                treeview.column("Endereço", width=150)
-            elif tipo == "funcionario":
-                treeview.column("Nome", width=150)
-                treeview.column("Departamento", width=120)
-                treeview.column("Setor", width=120)
-            else:
-                treeview.column("Nome", width=150)
-                treeview.column("Tipo Fornecimento", width=150)
-                treeview.column("Email", width=150)
+            filtered_treeview.bind('<<TreeviewSelect>>', lambda e, t=tipo: self.on_treeview_select(e, t))
+            filtered_treeview.bind('<Double-1>', lambda e, t=tipo: self.on_double_click(e, t))
 
-            vsb = ttk.Scrollbar(container, orient="vertical", command=treeview.yview)
-            treeview.configure(yscrollcommand=vsb.set)
-            
-            hsb = ttk.Scrollbar(container, orient="horizontal", command=treeview.xview)
-            treeview.configure(xscrollcommand=hsb.set)
-
-            treeview.grid(row=0, column=0, sticky="nsew")
-            vsb.grid(row=0, column=1, sticky="ns")
-            hsb.grid(row=1, column=0, sticky="ew")
-
-            self.treeviews[tipo] = treeview
-
-            treeview.bind('<<TreeviewSelect>>', lambda e, t=tipo: self.on_treeview_select(e, t))
-            treeview.bind('<Double-1>', lambda e, t=tipo: self.on_double_click(e, t))
-
-            treeview.tag_configure("selected", background="#e6f2ff", foreground="black")
-
-        # Iniciar a verificação periódica do estilo
         self.aplicar_estilo_persistente()
 
     def aplicar_estilo_persistente(self):
-        """Aplicar e manter o estilo das abas periodicamente para evitar reversão"""
         try:
-            # Re-aplicar o estilo a cada 3 segundos
             style = ttk.Style()
             style.configure("TNotebook.Tab",
-                           padding=[15, 6],  # Padding padrão menor
+                           padding=[15, 6],
                            font=('Roboto', 14, 'bold'),
                            background="#f0f0f0",
                            foreground="#333333")
             
-            # Mapear para aba selecionada ter padding maior
             style.map("TNotebook.Tab",
                      background=[("selected", "#ffffff"),
                                 ("active", "#e6e6e6")],
                      foreground=[("selected", "black"),
                                 ("active", "#333333")],
-                     padding=[("selected", [20, 8]),  # MAIOR quando selecionada
+                     padding=[("selected", [20, 8]),
                              ("active", [15, 6]),
-                             ("!selected", [15, 6])])  # MENOR quando não selecionada
+                             ("!selected", [15, 6])])
         except Exception as e:
             print(f"Estilo não pôde ser reaplicado: {e}")
         
-        # Agendar próxima verificação
         self.after(3000, self.aplicar_estilo_persistente)
 
     def menu_import_export_selecionado(self, opcao):
@@ -1991,77 +2190,37 @@ class TelaPrincipal(ctk.CTkToplevel):
             self.destroy()
 
     def atualizar_lista(self):
-        # Se as treeviews ainda não foram criadas, não fazer nada
-        if not hasattr(self, 'treeviews'):
+        if not hasattr(self, 'filtered_treeviews'):
             return
 
-        for tipo, treeview in self.treeviews.items():
-            self.preencher_treeview(tipo, treeview)
+        for tipo, filtered_treeview in self.filtered_treeviews.items():
+            self.preencher_treeview(tipo, filtered_treeview)
 
-    def preencher_treeview(self, tipo, treeview):
-        for item in treeview.get_children():
-            treeview.delete(item)
-        
+    def preencher_treeview(self, tipo, filtered_treeview):
         arquivo = ARQUIVO_PESSOAS[tipo]
         pessoas = carregar_dados_banco(arquivo)
         
+        dados_formatados = []
         for pessoa in pessoas:
-            if tipo == "cliente":
-                valores = [
-                    tratar_valor_vazio(pessoa.get("nome", "")),
-                    tratar_valor_vazio(pessoa.get("cpf", "")),
-                    tratar_valor_vazio(pessoa.get("data_nasc", "")),
-                    tratar_valor_vazio(pessoa.get("idade", "")),
-                    tratar_valor_vazio(pessoa.get("email", "")),
-                    tratar_valor_vazio(pessoa.get("cep", "")),
-                    tratar_valor_vazio(pessoa.get("endereco", "")),
-                    tratar_valor_vazio(pessoa.get("numero", "")),
-                    tratar_valor_vazio(pessoa.get("bairro", "")),
-                    tratar_valor_vazio(pessoa.get("cidade", "")),
-                    tratar_valor_vazio(pessoa.get("estado", ""))
-                ]
-            elif tipo == "funcionario":
-                valores = [
-                    tratar_valor_vazio(pessoa.get("nome", "")),
-                    tratar_valor_vazio(pessoa.get("cpf", "")),
-                    tratar_valor_vazio(pessoa.get("data_nasc", "")),
-                    tratar_valor_vazio(pessoa.get("idade", "")),
-                    tratar_valor_vazio(pessoa.get("departamento", "")),
-                    tratar_valor_vazio(pessoa.get("setor", "")),
-                    tratar_valor_vazio(pessoa.get("data_admissao", "")),
-                    tratar_valor_vazio(pessoa.get("email", ""))
-                ]
-            else:
-                valores = [
-                    tratar_valor_vazio(pessoa.get("nome", "")),
-                    tratar_valor_vazio(pessoa.get("cnpj", "")),
-                    tratar_valor_vazio(pessoa.get("tipo_fornecimento", "")),
-                    tratar_valor_vazio(pessoa.get("email", "")),
-                    tratar_valor_vazio(pessoa.get("cep", "")),
-                    tratar_valor_vazio(pessoa.get("endereco", "")),
-                    tratar_valor_vazio(pessoa.get("numero", "")),
-                    tratar_valor_vazio(pessoa.get("bairro", "")),
-                    tratar_valor_vazio(pessoa.get("cidade", "")),
-                    tratar_valor_vazio(pessoa.get("estado", ""))
-                ]
-            
-            treeview.insert("", "end", values=valores)
+            dados_formatados.append(pessoa)
+        
+        filtered_treeview.load_data(dados_formatados)
 
     def on_treeview_select(self, event, tipo):
-        treeview = self.treeviews[tipo]
-        selected = treeview.selection()
+        filtered_treeview = self.filtered_treeviews[tipo]
+        selected = filtered_treeview.selection()
         if selected:
             self.btn_editar.configure(state="normal")
             self.btn_excluir.configure(state="normal")
-            self.treeview_selecionada = treeview
+            self.treeview_selecionada = filtered_treeview
             self.tipo_selecionado = tipo
         else:
             self.btn_editar.configure(state="disabled")
             self.btn_excluir.configure(state="disabled")
 
     def on_double_click(self, event, tipo):
-        treeview = self.treeviews[tipo]
-        selected = treeview.selection()
+        filtered_treeview = self.filtered_treeviews[tipo]
+        selected = filtered_treeview.selection()
         if selected:
             self.abrir_editar()
 
