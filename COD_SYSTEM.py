@@ -22,6 +22,48 @@ ARQUIVO_PESSOAS = {
 }
 SEM_IMAGEM = "fotos/sem_imagem.png"
 
+class PlaceholderEntry(ctk.CTkEntry):
+    def __init__(self, master=None, placeholder_text="", placeholder_color="#A9A9A9", show=None, **kwargs):
+        super().__init__(master, **kwargs)
+        
+        self.placeholder_text = placeholder_text
+        self.placeholder_color = placeholder_color
+        self.default_fg_color = self.cget("text_color")
+        self.has_placeholder = True
+        self._show = show
+        
+        if not super().get():
+            self.add_placeholder()
+        
+        self.bind("<FocusIn>", self.remove_placeholder)
+        self.bind("<FocusOut>", self.add_placeholder_if_empty)
+        self.bind("<KeyPress>", self.on_key_press)
+    
+    def add_placeholder(self):
+        self.configure(text_color=self.placeholder_color, show="")
+        self.delete(0, "end")
+        self.insert(0, self.placeholder_text)
+        self.has_placeholder = True
+    
+    def remove_placeholder(self, event=None):
+        if self.has_placeholder:
+            self.configure(text_color=self.default_fg_color, show=self._show)
+            self.delete(0, "end")
+            self.has_placeholder = False
+    
+    def add_placeholder_if_empty(self, event=None):
+        if not super().get():
+            self.add_placeholder()
+    
+    def get(self):
+        if self.has_placeholder:
+            return ""
+        return super().get()
+    
+    def on_key_press(self, event):
+        if self.has_placeholder and event.keysym not in ['Tab', 'Shift_L', 'Shift_R', 'Control_L', 'Control_R']:
+            self.remove_placeholder()
+
 def tratar_valor_vazio(valor):
     if valor is None:
         return "N/A"
@@ -36,16 +78,18 @@ def tratar_valor_vazio(valor):
 
 def formatar_valor_exibicao(valor):
     valor_tratado = tratar_valor_vazio(valor)
-    if valor_tratado == "N/A":
-        return ""
     return str(valor_tratado)
 
 def carregar_dados_banco(nome_arquivo):
     if not os.path.exists(nome_arquivo):
         with open(nome_arquivo, "w") as f:
             json.dump([], f)
-    with open(nome_arquivo, "r") as f:
-        return json.load(f)
+        return []
+    try:
+        with open(nome_arquivo, "r") as f:
+            return json.load(f)
+    except:
+        return []
 
 def salvar_dados_banco(nome_arquivo, data):
     dados_tratados = []
@@ -93,40 +137,40 @@ class FilteredTreeview(ctk.CTkFrame):
         self.tipo = tipo
         self.columns = columns
         self.all_data = []
+        self.original_data = []
+        self.sort_states = {}
+        
+        for col in columns:
+            self.sort_states[col] = 0
         
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
-        self.filter_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.filter_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        self.filter_frame = ctk.CTkFrame(self, fg_color="white")
+        self.filter_frame.grid(row=0, column=0, sticky="ew", padx=3, pady=3)
         self.filter_frame.grid_columnconfigure(0, weight=1)
+        self.filter_frame.grid_columnconfigure(1, weight=0)
         
-        self.filter_button = ctk.CTkButton(
+        self.search_var = ctk.StringVar()
+        self.search_entry = PlaceholderEntry(
             self.filter_frame,
-            text="Filtrar por:",
-            command=self.toggle_filter_fields,
-            fg_color="#047194",
-            hover_color="#008ab6",
+            placeholder_text="Pesquisar🔎",
+            textvariable=self.search_var,
             width=100,
-            height=25
+            height=20,
+            border_width=2,
+            corner_radius=4,
+            border_color="#8F8F8F",
+            font=("Segoe UI Emoji", 14)
         )
-        self.filter_button.grid(row=0, column=0, sticky="w", padx=(0, 10))
+        self.search_entry.grid(row=0, column=0, sticky="w", padx=10, pady=5)
         
-        self.filter_fields_frame = ctk.CTkFrame(self.filter_frame, fg_color="transparent")
-        self.filter_fields_frame.grid(row=1, column=0, sticky="ew", pady=(5, 0))
+        self.buttons_frame = ctk.CTkFrame(self.filter_frame, fg_color="white")
+        self.buttons_frame.grid(row=0, column=1, sticky="e", padx=5, pady=5)
         
-        for i in range(len(columns)):
-            self.filter_fields_frame.grid_columnconfigure(i, weight=1)
+        self.search_var.trace('w', self.on_search_change)
         
-        self.filter_vars = {}
-        self.filter_entries = {}
-        
-        self.create_filter_fields()
-        
-        self.filter_fields_visible = False
-        self.filter_fields_frame.grid_remove()
-        
-        self.tree_frame = ctk.CTkFrame(self)
+        self.tree_frame = ctk.CTkFrame(self, fg_color="white")
         self.tree_frame.grid(row=1, column=0, sticky="nsew")
         self.tree_frame.grid_rowconfigure(0, weight=1)
         self.tree_frame.grid_columnconfigure(0, weight=1)
@@ -143,98 +187,172 @@ class FilteredTreeview(ctk.CTkFrame):
         
         self.setup_columns()
         
-    def create_filter_fields(self):
-        total_columns = len(self.columns)
-        field_width = max(80, 400 // total_columns)
+        for col in columns:
+            self.treeview.heading(col, command=lambda c=col: self.sort_column(c))
         
-        for i, col in enumerate(self.columns):
-            field_frame = ctk.CTkFrame(self.filter_fields_frame, fg_color="transparent")
-            field_frame.grid(row=0, column=i, sticky="ew", padx=2)
-            field_frame.grid_columnconfigure(1, weight=1)
+        self.search_entry.bind('<FocusIn>', self.on_search_focus)
+        self.treeview.bind('<Button-1>', self.on_treeview_click)
+
+    def on_search_focus(self, event):
+        pass
+
+    def on_treeview_click(self, event):
+        if self.search_entry.get() and not self.search_entry.has_placeholder:
+            self.filter_data()
+
+    def on_search_change(self, *args):
+        if hasattr(self, '_filter_job'):
+            self.after_cancel(self._filter_job)
+        self._filter_job = self.after(10, self.filter_data)
+
+    def set_buttons(self, buttons):
+        for i, (text, command) in enumerate(buttons):
+            if "➕Cadastrar" in text:
+                fg_color = "#4CAF50"
+                hover_color = "#66BB6A"
+                border_color = "#2E7D32"
+            elif "✏️Editar" in text:
+                fg_color = "#047194"
+                hover_color = "#0490c7"
+                border_color = "#034b66"
+            elif "🗑️Excluir" in text:
+                fg_color = "#e74c3c"
+                hover_color = "#ff6b5c"
+                border_color = "#c0392b"
+            else:
+                fg_color = "#4f8cff"
+                hover_color = "#357ae8"
+                border_color = "#357ae8"
             
-            input_container = ctk.CTkFrame(field_frame, fg_color="transparent", height=28)
-            input_container.pack(fill="x", expand=True)
-            input_container.grid_columnconfigure(1, weight=1)
-            
-            filter_icon = ctk.CTkLabel(
-                input_container,
-                text="▽",
-                width=20,
-                font=("Arial", 12),
-                text_color="#666666"
-            )
-            filter_icon.grid(row=0, column=0, padx=(5, 0), sticky="w")
-            
-            self.filter_vars[col] = ctk.StringVar()
-            entry = ctk.CTkEntry(
-                input_container,
-                textvariable=self.filter_vars[col],
-                placeholder_text=col,
-                width=field_width - 30,
+            btn = ctk.CTkButton(
+                self.buttons_frame,
+                text=text,
+                command=command,
+                width=80,
                 height=25,
-                border_width=1,
-                corner_radius=4
+                font=("Segoe UI Emoji", 12, "bold"),
+                fg_color=fg_color,
+                hover_color=hover_color,
+                text_color="#fff",
+                border_color=border_color,
+                border_width=2
             )
-            entry.grid(row=0, column=1, sticky="ew", padx=(2, 5))
-            
-            self.filter_vars[col].trace("w", self.on_filter_change)
-            
-            self.filter_entries[col] = entry
-    
-    def toggle_filter_fields(self):
-        if self.filter_fields_visible:
-            self.filter_fields_frame.grid_remove()
-            self.filter_fields_visible = False
-        else:
-            self.filter_fields_frame.grid()
-            self.filter_fields_visible = True
-    
-    def on_filter_change(self, *args):
-        self.filter_data()
+            btn.grid(row=0, column=i, padx=2)
     
     def filter_data(self):
         if not self.all_data:
             return
             
+        search_term = self.search_var.get().lower().strip()
+        
+        if not search_term or search_term == self.search_entry.placeholder_text.lower():
+            self.display_data(self.all_data)
+            return
+        
         filtered_data = []
         
         for row_data in self.all_data:
-            match = True
+            match = False
             
-            for col in self.columns:
-                filter_value = self.filter_vars[col].get().lower().strip()
-                
-                if filter_value:
-                    key_map = {
-                        "Nome": "nome",
-                        "CPF": "cpf", 
-                        "CNPJ": "cnpj",
-                        "Data Nasc.": "data_nasc",
-                        "Idade": "idade",
-                        "Email": "email",
-                        "CEP": "cep",
-                        "Endereço": "endereco",
-                        "Número": "numero",
-                        "Bairro": "bairro",
-                        "Cidade": "cidade",
-                        "Estado": "estado",
-                        "Departamento": "departamento",
-                        "Setor": "setor",
-                        "Data Admissão": "data_admissao",
-                        "Tipo Fornecimento": "tipo_fornecimento"
-                    }
-                    
-                    key = key_map.get(col, col.lower())
-                    cell_value = str(row_data.get(key, "")).lower()
-                    
-                    if filter_value not in cell_value:
-                        match = False
+            for key, value in row_data.items():
+                if key != "tipo":
+                    cell_value = str(value).lower()
+                    if search_term in cell_value:
+                        match = True
                         break
             
             if match:
                 filtered_data.append(row_data)
         
         self.display_data(filtered_data)
+    
+    def sort_column(self, column):
+        self.sort_states[column] = (self.sort_states[column] + 1) % 3
+        
+        current_data = []
+        for item in self.treeview.get_children():
+            values = self.treeview.item(item, 'values')
+            key_map = {
+                "Nome": "nome",
+                "CPF": "cpf", 
+                "CNPJ": "cnpj",
+                "Data Nasc.": "data_nasc",
+                "Idade": "idade",
+                "Email": "email",
+                "CEP": "cep",
+                "Endereço": "endereco",
+                "Número": "numero",
+                "Bairro": "bairro",
+                "Cidade": "cidade",
+                "Estado": "estado",
+                "Departamento": "departamento",
+                "Setor": "setor",
+                "Data Admissão": "data_admissao",
+                "Tipo Fornecimento": "tipo_fornecimento"
+            }
+            
+            col_index = self.columns.index(column)
+            key = key_map.get(column, column.lower())
+            
+            for original_item in self.all_data:
+                original_value = str(original_item.get(key, ""))
+                displayed_value = values[col_index]
+                if original_value == displayed_value or (not original_value and displayed_value == "N/A"):
+                    current_data.append(original_item)
+                    break
+        
+        if self.sort_states[column] == 0:
+            sorted_data = current_data
+            sort_indicator = ""
+        elif self.sort_states[column] == 1:
+            key_map = {
+                "Nome": "nome",
+                "CPF": "cpf", 
+                "CNPJ": "cnpj",
+                "Data Nasc.": "data_nasc",
+                "Idade": "idade",
+                "Email": "email",
+                "CEP": "cep",
+                "Endereço": "endereco",
+                "Número": "numero",
+                "Bairro": "bairro",
+                "Cidade": "cidade",
+                "Estado": "estado",
+                "Departamento": "departamento",
+                "Setor": "setor",
+                "Data Admissão": "data_admissao",
+                "Tipo Fornecimento": "tipo_fornecimento"
+            }
+            key = key_map.get(column, column.lower())
+            sorted_data = sorted(current_data, key=lambda x: str(x.get(key, "")).lower())
+            sort_indicator = " ▲"
+        else:
+            key_map = {
+                "Nome": "nome",
+                "CPF": "cpf", 
+                "CNPJ": "cnpj",
+                "Data Nasc.": "data_nasc",
+                "Idade": "idade",
+                "Email": "email",
+                "CEP": "cep",
+                "Endereço": "endereco",
+                "Número": "numero",
+                "Bairro": "bairro",
+                "Cidade": "cidade",
+                "Estado": "estado",
+                "Departamento": "departamento",
+                "Setor": "setor",
+                "Data Admissão": "data_admissao",
+                "Tipo Fornecimento": "tipo_fornecimento"
+            }
+            key = key_map.get(column, column.lower())
+            sorted_data = sorted(current_data, key=lambda x: str(x.get(key, "")).lower(), reverse=True)
+            sort_indicator = " ▼"
+        
+        current_text = self.treeview.heading(column)["text"].replace(" ▲", "").replace(" ▼", "")
+        self.treeview.heading(column, text=current_text + sort_indicator)
+        
+        self.display_data(sorted_data)
     
     def setup_columns(self):
         column_configs = {
@@ -284,7 +402,13 @@ class FilteredTreeview(ctk.CTkFrame):
     
     def load_data(self, data):
         self.all_data = data
-        self.filter_data()
+        self.original_data = data.copy()
+        self.display_data(data)
+        
+        for col in self.columns:
+            self.sort_states[col] = 0
+            current_text = self.treeview.heading(col)["text"].replace(" ▲", "").replace(" ▼", "")
+            self.treeview.heading(col, text=current_text)
     
     def display_data(self, data):
         for item in self.treeview.get_children():
@@ -314,6 +438,7 @@ class FilteredTreeview(ctk.CTkFrame):
                 
                 key = key_map.get(col, col.lower())
                 values.append(formatar_valor_exibicao(row_data.get(key, "")))
+            
             self.treeview.insert("", "end", values=values)
     
     def bind(self, sequence, func):
@@ -490,7 +615,7 @@ class TelaLogin(ctk.CTk):
             fg_color="#047194", 
             hover_color="#008ab6", 
             text_color="#fff",
-            font=("Roboto", 16, "bold"), 
+            font=("Segoe UI Emoji", 16, "bold"), 
             corner_radius=12, 
             height=40, 
             width=120
@@ -504,7 +629,7 @@ class TelaLogin(ctk.CTk):
             fg_color="#9b59b6", 
             hover_color="#8e44ad", 
             text_color="#fff",
-            font=("Roboto", 16, "bold"), 
+            font=("Segoe UI Emoji", 16, "bold"), 
             corner_radius=12, 
             height=40,  
             width=120,
@@ -579,8 +704,9 @@ class TelaLogin(ctk.CTk):
 
         )
         usuario_label.pack(pady=(0,0), padx=(130), anchor="w") 
-        self.usuario_entry = ctk.CTkEntry(
+        self.usuario_entry = PlaceholderEntry(
             login_frame, 
+            placeholder_text="Digite seu usuário",
             textvariable=self.usuario_var, 
             width=280, 
             height=38, 
@@ -605,14 +731,16 @@ class TelaLogin(ctk.CTk):
             justify="left",
         )
         senha_label.pack(pady=(8,0), padx=(130), anchor="w") 
-        self.senha_entry = ctk.CTkEntry(
+        
+        self.senha_entry = PlaceholderEntry(
             login_frame, 
+            placeholder_text="Digite sua senha",
             textvariable=self.senha_var, 
-            show="●", 
+            show="●",
             width=280, 
             height=38, 
             corner_radius=10, 
-            font=("Roboto", 13)
+            font=("Roboto", 16)
         )
         self.senha_entry.pack(padx=28)
         self.senha_asterisk = ctk.CTkLabel(
@@ -683,7 +811,7 @@ class TelaLogin(ctk.CTk):
             fg_color="#047194", 
             hover_color="#008ab6", 
             text_color="#fff",
-            font=("Roboto", 18, "bold"), 
+            font=("Segoe UI Emoji", 18, "bold"), 
             corner_radius=12, 
             height=44, 
             width=120,
@@ -697,7 +825,7 @@ class TelaLogin(ctk.CTk):
             fg_color="#047194", 
             hover_color="#008ab6", 
             text_color="#fff",
-            font=("Roboto", 18, "bold"), 
+            font=("Segoe UI Emoji", 18, "bold"), 
             corner_radius=12, 
             height=44, 
             width=120,
@@ -800,8 +928,19 @@ class TelaRegistroUsuario(ctk.CTkToplevel):
                 )
                 entry.pack(pady=(0,2), padx=10)
             else:
-                entry = ctk.CTkEntry(
+                placeholder_texts = {
+                    "nome": "Digite seu nome completo",
+                    "email": "exemplo@email.com",
+                    "data_nasc": "dd/mm/aaaa",
+                    "departamento": "Digite o departamento",
+                    "setor": "Digite o setor",
+                    "usuario": "Escolha um nome de usuário",
+                    "senha": "Crie uma senha"
+                }
+                
+                entry = PlaceholderEntry(
                     form_frame, 
+                    placeholder_text=placeholder_texts.get(campo, ""),
                     textvariable=self.vars[campo], 
                     show="*" if campo=="senha" else None, 
                     width=300, 
@@ -864,7 +1003,7 @@ class TelaRegistroUsuario(ctk.CTkToplevel):
             fg_color="#4f8cff", 
             hover_color="#357ae8", 
             text_color="#fff", 
-            font=("Roboto", 14, "bold"), 
+            font=("Segoe UI Emoji", 14, "bold"), 
             corner_radius=12, 
             height=38, 
             width=200,
@@ -1038,7 +1177,7 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
             fg_color="#047194", 
             hover_color="#008ab6", 
             text_color="#fff", 
-            font=("Roboto", 18, "bold"), 
+            font=("Segoe UI Emoji", 18, "bold"), 
             corner_radius=12, 
             height=38, 
             width=110,
@@ -1139,21 +1278,21 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
                 cep_frame.pack(fill="x", padx=150)
                 
                 self.vars[campo] = ctk.StringVar(value=tratar_valor_vazio(dados_existentes.get(campo, "")))
-                cep_entry = ctk.CTkEntry(
+                cep_entry = PlaceholderEntry(
                     cep_frame, 
+                    placeholder_text="00000-000",
                     textvariable=self.vars[campo], 
                     width=240, 
                     height=32, 
                     corner_radius=10, 
-                    font=("Roboto", 12),
-                    placeholder_text="00000-000"
+                    font=("Roboto", 12)
                 )
                 cep_entry.pack(side="left", padx=(0,5))
                 
                 self.buscar_cep_btn = ctk.CTkButton(
                     cep_frame, 
                     text="🔍", 
-                    font=("Roboto", 20),
+                    font=("Segoe UI Emoji", 20),
                     width=40, 
                     height=32, 
                     corner_radius=10,
@@ -1168,9 +1307,27 @@ class TelaCadastroPessoa(ctk.CTkToplevel):
                 if not self.cep_disponivel:
                     self.buscar_cep_btn.configure(state="disabled", fg_color="#cccccc")
             else:
+                placeholder_texts = {
+                    "nome": "Digite o nome completo",
+                    "cpf": "000.000.000-00",
+                    "cnpj": "00.000.000/0000-00",
+                    "data_nasc": "dd/mm/aaaa",
+                    "departamento": "Digite o departamento",
+                    "setor": "Digite o setor",
+                    "data_admissao": "dd/mm/aaaa",
+                    "tipo_fornecimento": "Tipo de fornecimento",
+                    "endereco": "Rua, Avenida, etc",
+                    "numero": "Número",
+                    "bairro": "Bairro",
+                    "cidade": "Cidade",
+                    "estado": "UF",
+                    "email": "exemplo@email.com"
+                }
+                
                 self.vars[campo] = ctk.StringVar(value=tratar_valor_vazio(dados_existentes.get(campo, "")))
-                entry = ctk.CTkEntry(
+                entry = PlaceholderEntry(
                     self.campos_frame, 
+                    placeholder_text=placeholder_texts.get(campo, ""),
                     textvariable=self.vars[campo], 
                     width=300, 
                     height=32, 
@@ -1281,7 +1438,7 @@ class TelaExportar(ctk.CTkToplevel):
             fg_color="#2ecc71",
             hover_color="#27ae60",
             text_color="#fff",
-            font=("Sego UI", 14, "bold"),
+            font=("Segoe UI Emoji", 14, "bold"),
             corner_radius=12,
             height=40,
             width=200
@@ -1375,8 +1532,9 @@ class TelaImportar(ctk.CTkToplevel):
 
         self.file_var = ctk.StringVar()
         ctk.CTkLabel(file_frame, text="Arquivo:").pack(side="left", padx=(0, 10))
-        self.file_entry = ctk.CTkEntry(
+        self.file_entry = PlaceholderEntry(
             file_frame, 
+            placeholder_text="Selecione um arquivo...",
             textvariable=self.file_var, 
             width=300, 
             height=30, 
@@ -1387,7 +1545,7 @@ class TelaImportar(ctk.CTkToplevel):
         browse_btn = ctk.CTkButton(
             file_frame, 
             text="💾", 
-            font=("Roboto", 23, "bold"),
+            font=("Segoe UI Emoji", 23, "bold"),
             width=40, 
             height=30, 
             corner_radius=10,
@@ -1400,7 +1558,7 @@ class TelaImportar(ctk.CTkToplevel):
         ctk.CTkButton(
             self, 
             text="⬇️Baixar Modelo", 
-            font=("Roboto", 16, "bold"),
+            font=("Segoe UI Emoji", 16, "bold"),
             command=self.baixar_modelo,
             fg_color="#2ecc71",
             hover_color="#27ae60",
@@ -1416,7 +1574,7 @@ class TelaImportar(ctk.CTkToplevel):
             fg_color="#2ecc71",
             hover_color="#27ae60",
             text_color="#fff",
-            font=("Roboto", 18, "bold"),
+            font=("Segoe UI Emoji", 18, "bold"),
             corner_radius=12,
             height=40,
             width=200
@@ -1456,7 +1614,7 @@ class TelaImportar(ctk.CTkToplevel):
 
     def importar(self):
         if not self.file_path:
-            messagebox.showerror("Erro", "Selecione um arquivo CSV или Excel.")
+            messagebox.showerror("Erro", "Selecione um arquivo CSV ou Excel.")
             return
 
         try:
@@ -1465,7 +1623,7 @@ class TelaImportar(ctk.CTkToplevel):
             elif self.file_path.endswith('.xlsx'):
                 df = pd.read_excel(self.file_path)
             else:
-                messagebox.showerror("Erro", "Formato não suportado. Use CSV или Excel.")
+                messagebox.showerror("Erro", "Formato não suportado. Use CSV ou Excel.")
                 return
             
             campos_por_tipo = {
@@ -1610,7 +1768,7 @@ class TelaPrincipal(ctk.CTkToplevel):
 
         info_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         info_frame.pack(pady=(0, 5), padx=10, fill="x")
-        
+
         nome = self.user.get("nome", "N/A")
         nome_label = ctk.CTkLabel(
             info_frame,
@@ -1899,67 +2057,21 @@ class TelaPrincipal(ctk.CTkToplevel):
         content_frame.grid(row=0, column=1, sticky="nsew", padx=0, pady=0)
         content_frame.grid_rowconfigure(0, weight=1)
         content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(1, weight=0)  
         
         self.listas_frame = ctk.CTkFrame(content_frame, fg_color="white")
         self.listas_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         self.listas_frame.grid_rowconfigure(0, weight=1)
         self.listas_frame.grid_columnconfigure(0, weight=1)
 
-        botoes_frame = ctk.CTkFrame(content_frame, fg_color="white")
-        botoes_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
-        botoes_frame.grid_columnconfigure(0, weight=1)
-        botoes_frame.grid_columnconfigure(1, weight=0)
-        botoes_frame.grid_columnconfigure(2, weight=0)
-        botoes_frame.grid_columnconfigure(3, weight=0)
-        botoes_frame.grid_columnconfigure(4, weight=1)
-
-        botoes_acoes = [
-            ("➕Cadastrar", "#4CAF50", self.abrir_cadastro_menu),
-            ("✏️Editar", "#047194", self.abrir_editar),
-            ("🗑️Excluir", "#e74c3c", self.abrir_excluir)
-        ]
-
-        for i, (texto, cor, comando) in enumerate(botoes_acoes):
-            borda_botoes = {
-                "➕Cadastrar": "#2E7D32",
-                "✏️Editar": "#034b66",
-                "🗑️Excluir": "#c0392b"
-            }[texto]
-
-            hover_botoes = {
-                "➕Cadastrar": "#66BB6A",
-                "✏️Editar": "#0490c7",
-                "🗑️Excluir": "#ff6b5c"
-            }[texto]
-
-            btn = ctk.CTkButton(
-                botoes_frame,
-                text=texto,
-                command=comando,
-                fg_color=cor,
-                hover_color=hover_botoes,
-                text_color="#fff",
-                font=("Segoe UI Emoji", 14, "bold"),
-                height=35,
-                width=100,
-                border_width=2,
-                border_color=borda_botoes
-            )
-            btn.grid(row=0, column=i+1, padx=5, pady=5)
-            if texto == "✏️Editar":
-                self.btn_editar = btn
-            elif texto == "🗑️Excluir":
-                self.btn_excluir = btn
-
-        self.btn_editar.configure(state="disabled")
-        self.btn_excluir.configure(state="disabled")
+        self.construir_abas()
+        self.atualizar_lista()
 
     def construir_abas(self):
         if hasattr(self, 'notebook'):
             return
 
         style = ttk.Style()
+        style.theme_use("clam")
         
         style.configure("TNotebook", 
                     background="#ffffff",
@@ -2022,6 +2134,13 @@ class TelaPrincipal(ctk.CTkToplevel):
 
             filtered_treeview = FilteredTreeview(container, colunas, tipo)
             filtered_treeview.pack(fill="both", expand=True)
+
+            botoes = [
+                ("➕Cadastrar", self.abrir_cadastro_menu),
+                ("✏️Editar", self.abrir_editar),
+                ("🗑️Excluir", self.abrir_excluir)
+            ]
+            filtered_treeview.set_buttons(botoes)
 
             self.filtered_treeviews[tipo] = filtered_treeview
 
@@ -2209,14 +2328,18 @@ class TelaPrincipal(ctk.CTkToplevel):
     def on_treeview_select(self, event, tipo):
         filtered_treeview = self.filtered_treeviews[tipo]
         selected = filtered_treeview.selection()
+        
+        buttons_frame = filtered_treeview.buttons_frame
+        for widget in buttons_frame.winfo_children():
+            if "✏️Editar" in widget.cget("text") or "🗑️Excluir" in widget.cget("text"):
+                if selected:
+                    widget.configure(state="normal")
+                else:
+                    widget.configure(state="disabled")
+        
         if selected:
-            self.btn_editar.configure(state="normal")
-            self.btn_excluir.configure(state="normal")
             self.treeview_selecionada = filtered_treeview
             self.tipo_selecionado = tipo
-        else:
-            self.btn_editar.configure(state="disabled")
-            self.btn_excluir.configure(state="disabled")
 
     def on_double_click(self, event, tipo):
         filtered_treeview = self.filtered_treeviews[tipo]

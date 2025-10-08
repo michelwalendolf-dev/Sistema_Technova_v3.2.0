@@ -41,27 +41,6 @@ class App(ctk.CTk):
             print(f"Erro ao carregar marca d'água: {e}")
             self.marcadagua_ctk_image = None
 
-        # Carregar imagens para série (sim e não) - manter como atributos
-        self.tk_images = []  # Lista para manter as referências das imagens
-        try:
-            img_sim = Image.open(os.path.join("Icones", "sim.ico"))
-            img_nao = Image.open(os.path.join("Icones", "nao.ico"))
-
-            # Redimensionar se necessário
-            img_sim = img_sim.resize((20, 20), Image.LANCZOS)
-            img_nao = img_nao.resize((20, 20), Image.LANCZOS)
-            
-            # Converter para formato Tkinter e manter como atributos
-            self.tk_img_sim = ImageTk.PhotoImage(img_sim)
-            self.tk_img_nao = ImageTk.PhotoImage(img_nao)
-            
-            # Manter referências na lista
-            self.tk_images.extend([self.tk_img_sim, self.tk_img_nao])
-        except Exception as e:
-            print(f"Erro ao carregar imagens de série: {e}")
-            self.tk_img_sim = None
-            self.tk_img_nao = None
-
         self.carregar_dados_json()
 
         self.produto_selecionado = None
@@ -190,19 +169,22 @@ class App(ctk.CTk):
         self.carregar_dados_json()
         
         for produto in self.dados_produtos:
+            # Determinar o ícone e cor com base no controle de série
             if produto["serie"] == "Sim":
-                imagem = self.tk_img_sim
+                texto_serie = "✔️"  # Ícone de check verde
+                tag = 'verde'
             else:
-                imagem = self.tk_img_nao
+                texto_serie = "❌"  # Ícone de X vermelho
+                tag = 'vermelho'
                 
             self.treeview_produtos.insert("", "end", values=(
-                "",  # Deixamos vazio porque vamos usar a imagem
+                texto_serie,
                 produto["codigo"],
                 produto["nome"],
                 produto["marca"],
                 produto["valor"],
                 produto["estoque"]
-            ), image=imagem)
+            ), tags=(tag,))
     
     def pesquisar_produtos(self):
         filtro_entries = [entry.get().lower() for entry in self.filtro_entries]
@@ -237,20 +219,22 @@ class App(ctk.CTk):
                         break
             
             if corresponde:
-                # Determinar a imagem com base no valor de "serie"
+                # Determinar o ícone com base no controle de série
                 if produto["serie"] == "Sim":
-                    imagem = self.tk_img_sim
+                    texto_serie = "✔️"
+                    tag = 'verde'
                 else:
-                    imagem = self.tk_img_nao
+                    texto_serie = "❌"
+                    tag = 'vermelho'
                     
                 self.treeview_produtos.insert("", "end", values=(
-                    "",  # Deixamos vazio porque vamos usar a imagem
+                    texto_serie,
                     produto["codigo"],
                     produto["nome"],
                     produto["marca"],
                     produto["valor"],
                     produto["estoque"]
-                ), image=imagem)
+                ), tags=(tag,))
     
     def pesquisar_series(self):
         filtro_entries = [entry.get().lower() for entry in self.filtro_series_entries]
@@ -507,90 +491,6 @@ class App(ctk.CTk):
             # Inicialmente desabilitar a aba de séries
             self.notebook_produtos.tab(1, state="disabled")
 
-            # FRAME DE BOTÕES (AGORA ABAIXO DO NOTEBOOK)
-            frame_botoes = ctk.CTkFrame(frame_pai, height=50, fg_color="#f0f0f0", corner_radius=0)
-            frame_botoes.pack(fill="x", pady=(0, 10))
-            frame_botoes.pack_propagate(False)
-
-            btn_novo = ctk.CTkButton(
-                frame_botoes,
-                text="Novo",
-                width=80,
-                height=30,
-                fg_color="#4CAF50",
-                hover_color="#54C057",
-                border_color="#429647",
-                border_width=2,
-                text_color="white",
-                command=self.abrir_tela_produto
-            )
-            btn_novo.pack(side="left", padx=(10, 5), pady=10)
-
-            btn_editar = ctk.CTkButton(
-                frame_botoes,
-                text="Editar",
-                width=80,
-                height=30,
-                fg_color="#2196F3",
-                hover_color="#46A4F1",
-                border_color="#0b7dda",
-                border_width=2,
-                text_color="white",
-                command=self.editar_produto
-            )
-            btn_editar.pack(side="left", padx=5, pady=10)
-
-            btn_excluir = ctk.CTkButton(
-                frame_botoes,
-                text="Excluir",
-                width=80,
-                height=30,
-                fg_color="#f44336",
-                hover_color="#da190b",
-                border_color="#da190b",
-                border_width=2,
-                text_color="white",
-                command=self.excluir_produto
-            )
-            btn_excluir.pack(side="left", padx=5, pady=10)
-
-            mais_opcoes = ctk.CTkOptionMenu(
-                frame_botoes,
-                values=[
-                    "⬆Exportar dados", 
-                    "💾Importar dados",
-                    "📄Relatório"
-                ],
-                width=120,
-                height=30,
-                font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
-                fg_color="#9E9E9E",
-                button_color="#9E9E9E",
-                button_hover_color="#9E9E9E",
-                dropdown_fg_color="#ffffff",
-                dropdown_text_color="black",
-                dropdown_hover_color="#f0f0f0",
-            )
-            mais_opcoes.set("Mais opções")
-            mais_opcoes.pack(side="left", padx=5, pady=10)
-
-            espaco_vazio = ctk.CTkFrame(frame_botoes, fg_color="transparent")
-            espaco_vazio.pack(side="left", fill="x", expand=True)
-
-            btn_sair = ctk.CTkButton(
-                frame_botoes,
-                text="Sair",
-                width=80,
-                height=30,
-                fg_color="#f44336",
-                hover_color="#da190b",
-                border_color="#da190b",
-                border_width=2,
-                text_color="white",
-                command=self.fechar_tela_produtos
-            )
-            btn_sair.pack(side="right", padx=10, pady=10)
-
             # Construir o conteúdo das abas com pequeno delay
             self.after(100, self._finalizar_construcao_produtos)
             
@@ -603,10 +503,99 @@ class App(ctk.CTk):
             self.construir_aba_produtos()
             self.construir_aba_series()
             
+            # AGORA ADICIONAR OS BOTÕES ENTRE O TREEVIEW E AS ABAS
+            self._adicionar_botoes_entre_abas()
+            
             # Forçar atualização final
             self.update_idletasks()
         except Exception as e:
             print(f"Erro ao finalizar construção: {e}")
+
+    def _adicionar_botoes_entre_abas(self):
+        """Adicionar botões entre o Treeview e as abas"""
+        # Criar frame para os botões que será posicionado entre as abas
+        frame_botoes = ctk.CTkFrame(self.area_conteudo, height=50, fg_color="#f0f0f0", corner_radius=0)
+        frame_botoes.pack(fill="x", pady=(0, 10), before=self.notebook_produtos)
+        frame_botoes.pack_propagate(False)
+
+        btn_novo = ctk.CTkButton(
+            frame_botoes,
+            text="Novo",
+            width=80,
+            height=30,
+            fg_color="#4CAF50",
+            hover_color="#54C057",
+            border_color="#429647",
+            border_width=2,
+            text_color="white",
+            command=self.abrir_tela_produto
+        )
+        btn_novo.pack(side="left", padx=(10, 5), pady=10)
+
+        btn_editar = ctk.CTkButton(
+            frame_botoes,
+            text="Editar",
+            width=80,
+            height=30,
+            fg_color="#2196F3",
+            hover_color="#46A4F1",
+            border_color="#0b7dda",
+            border_width=2,
+            text_color="white",
+            command=self.editar_produto
+        )
+        btn_editar.pack(side="left", padx=5, pady=10)
+
+        btn_excluir = ctk.CTkButton(
+            frame_botoes,
+            text="Excluir",
+            width=80,
+            height=30,
+            fg_color="#f44336",
+            hover_color="#da190b",
+            border_color="#da190b",
+            border_width=2,
+            text_color="white",
+            command=self.excluir_produto
+        )
+        btn_excluir.pack(side="left", padx=5, pady=10)
+
+        mais_opcoes = ctk.CTkOptionMenu(
+            frame_botoes,
+            values=[
+                "⬆Exportar dados", 
+                "💾Importar dados",
+                "📄Relatório"
+            ],
+            width=120,
+            height=30,
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
+            fg_color="#9E9E9E",
+            button_color="#9E9E9E",
+            button_hover_color="#9E9E9E",
+            dropdown_fg_color="#ffffff",
+            dropdown_text_color="black",
+            dropdown_hover_color="#f0f0f0",
+        )
+        mais_opcoes.set("Mais opções")
+        mais_opcoes.pack(side="left", padx=5, pady=10)
+
+        espaco_vazio = ctk.CTkFrame(frame_botoes, fg_color="transparent")
+        espaco_vazio.pack(side="left", fill="x", expand=True)
+
+        btn_sair = ctk.CTkButton(
+            frame_botoes,
+            text="Sair",
+            width=80,
+            height=30,
+            fg_color="#f44336",
+            hover_color="#da190b",
+            border_color="#da190b",
+            border_width=2,
+            text_color="white",
+            command=self.fechar_tela_produtos
+        )
+        btn_sair.pack(side="right", padx=10, pady=10)
 
     def construir_aba_produtos(self):
         frame_principal = ctk.CTkFrame(self.frame_aba_produtos, fg_color="white")
@@ -681,13 +670,29 @@ class App(ctk.CTk):
         lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
 
+        # CONFIGURAÇÃO DO ESTILO DO TREEVIEW
         estilo = ttk.Style()
         estilo.theme_use("clam")
-        estilo.configure("Treeview.Heading", font=("Roboto", 13, "bold"), background="#ebebeb")
-        estilo.configure("Treeview", font=("Segoe UI Emoji", 12), background="white", fieldbackground="white", foreground="black")
+        
+        # Configurar o estilo do Treeview
+        estilo.configure("Treeview.Heading", 
+                        font=("Roboto", 13, "bold"), 
+                        background="#ebebeb",
+                        foreground="black")
+        
+        estilo.configure("Treeview", 
+                        font=("Segoe UI", 12), 
+                        background="white", 
+                        fieldbackground="white", 
+                        foreground="black",
+                        rowheight=25)
 
         colunas = ("serie", "codigo", "nome", "marca", "valor", "estoque")
         self.treeview_produtos = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
+
+        # CONFIGURAR AS TAGS NO TREEVIEW - APENAS PARA A COLUNA SÉRIE
+        self.treeview_produtos.tag_configure('verde', foreground='green')
+        self.treeview_produtos.tag_configure('vermelho', foreground='red')
 
         self.treeview_produtos.heading("serie", text="Série")
         self.treeview_produtos.heading("codigo", text="Cod. Produto")
@@ -709,20 +714,30 @@ class App(ctk.CTk):
         self.treeview_produtos.pack(side="left", fill="both", expand=True)
         barra_rolagem.pack(side="right", fill="y")
 
+        # POPULAR O TREEVIEW - APLICANDO TAGS APENAS NA COLUNA SÉRIE
         for produto in self.dados_produtos:
+            # Determinar o ícone e tag com base no controle de série
             if produto["serie"] == "Sim":
-                imagem = self.tk_img_sim
+                texto_serie = "✔️"
+                tag = 'verde'
             else:
-                imagem = self.tk_img_nao
+                texto_serie = "❌"
+                tag = 'vermelho'
                 
-            self.treeview_produtos.insert("", "end", values=(
-                "",  # Deixamos vazio porque vamos usar a imagem
+            # Inserir o item com a tag
+            item_id = self.treeview_produtos.insert("", "end", values=(
+                texto_serie,
                 produto["codigo"],
                 produto["nome"],
                 produto["marca"],
                 produto["valor"],
                 produto["estoque"]
-            ), image=imagem)
+            ), tags=(tag,))
+            
+            # APENAS A COLUNA SÉRIE TERÁ COR - aplicar a tag apenas à primeira coluna
+            # As outras colunas manterão a cor padrão (preto)
+            self.treeview_produtos.set(item_id, "serie", texto_serie)
+
         self.treeview_produtos.bind("<<TreeviewSelect>>", self.on_produto_selecionado)
         self.treeview_produtos.bind("<Double-Button-1>", self.abrir_edicao_duplo_clique)
         
@@ -793,7 +808,7 @@ class App(ctk.CTk):
         )
         filtro_label.pack(pady=(10, 5))
 
-        campos_filtro = ["Série", "Série Alternativa", "Status"]
+        campos_filtro = ["Nº Série", "Nº Série Alternativa", "Status"]
 
         self.filtro_series_entries = []  
 
@@ -851,8 +866,8 @@ class App(ctk.CTk):
         colunas = ("serie", "serie_alternativa", "produto", "estoque", "status", "contrato")
         self.treeview_series = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
 
-        self.treeview_series.heading("serie", text="Série")
-        self.treeview_series.heading("serie_alternativa", text="Série Alternativa")
+        self.treeview_series.heading("serie", text="Nº Série")
+        self.treeview_series.heading("serie_alternativa", text="Nº Série Alternativa")
         self.treeview_series.heading("produto", text="Produto")
         self.treeview_series.heading("estoque", text="Estoque")
         self.treeview_series.heading("status", text="Status")

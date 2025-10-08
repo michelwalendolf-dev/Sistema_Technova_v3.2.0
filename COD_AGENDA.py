@@ -143,7 +143,7 @@ class Agenda(ctk.CTk):
             frame_texto, 
             width=70, 
             height=22,
-            fg_color="#f5f5f5",
+            fg_color="white",
             corner_radius=5
         )
         frame_contador.pack_propagate(False)
@@ -190,10 +190,10 @@ class Agenda(ctk.CTk):
         
         btn_cor = ctk.CTkButton(
             frame_cor, 
-            text="Selecionar", 
+            text="🖌️Selecionar", 
             width=90,
             height=35,
-            font=("Roboto", 12, "bold"),
+            font=("Segoe UI Emoji", 12, "bold"),
             fg_color="#1a73e8",
             hover_color="#1557b0",
             border_width=0,
@@ -205,10 +205,10 @@ class Agenda(ctk.CTk):
         # Botão Salvar melhorado
         btn_salvar = ctk.CTkButton(
             center_container, 
-            text="✓ Salvar", 
+            text="✔️Salvar", 
             width=100,
             height=35,
-            font=("Roboto", 13, "bold"),
+            font=("Segoe UI Emoji", 13, "bold"),
             fg_color="#34a853",
             hover_color="#2d8e47",
             border_width=0,
@@ -298,9 +298,9 @@ class Agenda(ctk.CTk):
         # Botões melhorados
         self.btn_agendamento = ctk.CTkButton(
             self.frame_topo,
-            text="+ Agendamento",
+            text="➕Agendamento",
             text_color="white",
-            font=("Roboto", 13, "bold"),
+            font=("Segoe UI Emoji", 13, "bold"),
             width=130,
             height=38,
             state="disabled",
@@ -314,7 +314,7 @@ class Agenda(ctk.CTk):
 
         self.btn_limpar_data = ctk.CTkButton(
             self.frame_topo,
-            text="🗑 Limpar",
+            text="❌Limpar",
             text_color="white",
             font=("Roboto", 13, "bold"),
             width=100,
