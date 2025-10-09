@@ -11,6 +11,294 @@ import tkinter.messagebox as messagebox
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
+class TelaIncluirSerie(ctk.CTkToplevel):
+    def __init__(self, parent, produto_selecionado_info):
+        super().__init__(parent)
+        self.parent = parent
+        self.produto_selecionado_info = produto_selecionado_info
+        self.title("Incluir Números de Série")
+        self.geometry("500x700")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+        
+        self.quantidade_valor = 0
+        
+        self.criar_widgets()
+        
+    def criar_widgets(self):
+        main_frame = ctk.CTkFrame(self, fg_color="white")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        titulo = ctk.CTkLabel(main_frame, text="INCLUIR NÚMEROS DE SÉRIE", 
+                             font=ctk.CTkFont(family="Segoe UI Emoji", size=18, weight="bold"),
+                             text_color="#2c3e50")
+        titulo.pack(pady=(0, 20))
+        
+        container_campos = ctk.CTkFrame(main_frame, fg_color="white")
+        container_campos.pack(fill="x", pady=10)
+        
+        ctk.CTkLabel(container_campos, text="Estoque:", text_color="black", 
+                    font=ctk.CTkFont(family="Segoe UI Emoji", size=14)).pack(anchor="w", pady=5)
+        
+        frame_estoque = ctk.CTkFrame(container_campos, fg_color="white")
+        frame_estoque.pack(fill="x", pady=5)
+        
+        self.estoque_entry = ctk.CTkEntry(frame_estoque, fg_color="white", text_color="black", 
+                                         border_color="#c0c0c0", height=35)
+        self.estoque_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        
+        ctk.CTkButton(frame_estoque, text="✕", width=35, height=35, 
+                     command=lambda: self.estoque_entry.delete(0, 'end')).pack(side="left", padx=2)
+        ctk.CTkButton(frame_estoque, text="⁞", width=35, height=35).pack(side="left", padx=2)
+        ctk.CTkButton(frame_estoque, text="🔍", width=35, height=35).pack(side="left", padx=2)
+        
+        ctk.CTkLabel(container_campos, text="Produto:", text_color="black",
+                    font=ctk.CTkFont(family="Segoe UI Emoji", size=14)).pack(anchor="w", pady=5)
+        
+        frame_produto = ctk.CTkFrame(container_campos, fg_color="white")
+        frame_produto.pack(fill="x", pady=5)
+        
+        self.produto_entry = ctk.CTkEntry(frame_produto, fg_color="white", text_color="black", 
+                                         border_color="#c0c0c0", height=35)
+        self.produto_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        self.produto_entry.insert(0, self.produto_selecionado_info['nome'])
+        self.produto_entry.configure(state="readonly")
+        ctk.CTkButton(frame_produto, text="✕", width=35, height=35, 
+                     command=lambda: self.produto_entry.delete(0, 'end')).pack(side="left", padx=2)
+        ctk.CTkButton(frame_produto, text="🔍", width=35, height=35).pack(side="left", padx=2)
+        
+        ctk.CTkLabel(container_campos, text="Tipo Movimento:", text_color="black",
+                    font=ctk.CTkFont(family="Segoe UI Emoji", size=14)).pack(anchor="w", pady=5)
+        
+        frame_tipo_mov = ctk.CTkFrame(container_campos, fg_color="white")
+        frame_tipo_mov.pack(fill="x", pady=5)
+        
+        self.tipo_mov_entry = ctk.CTkEntry(frame_tipo_mov, fg_color="white", text_color="black", 
+                                          border_color="#c0c0c0", height=35)
+        self.tipo_mov_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        ctk.CTkButton(frame_tipo_mov, text="✕", width=35, height=35, 
+                     command=lambda: self.tipo_mov_entry.delete(0, 'end')).pack(side="left", padx=2)
+        ctk.CTkButton(frame_tipo_mov, text="⁞", width=35, height=35).pack(side="left", padx=2)
+        ctk.CTkButton(frame_tipo_mov, text="🔍", width=35, height=35).pack(side="left", padx=2)
+        
+        ctk.CTkLabel(container_campos, text="Quantidade:", text_color="black",
+                    font=ctk.CTkFont(family="Segoe UI Emoji", size=14)).pack(anchor="w", pady=5)
+        
+        frame_quantidade = ctk.CTkFrame(container_campos, fg_color="white")
+        frame_quantidade.pack(fill="x", pady=5)
+        
+        self.quantidade_var = ctk.StringVar(value="0")
+        self.quantidade_entry = ctk.CTkEntry(frame_quantidade, textvariable=self.quantidade_var, 
+                                            fg_color="white", text_color="black", border_color="#c0c0c0", 
+                                            height=35)
+        self.quantidade_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        
+        frame_botoes_quantidade = ctk.CTkFrame(frame_quantidade, fg_color="white", width=70)
+        frame_botoes_quantidade.pack(side="left", fill="y")
+        frame_botoes_quantidade.pack_propagate(False)
+        
+        ctk.CTkButton(frame_botoes_quantidade, text="↑", width=30, height=30, 
+                     command=self.aumentar_quantidade).pack(side="top", fill="x", pady=1)
+        ctk.CTkButton(frame_botoes_quantidade, text="↓", width=30, height=30, 
+                     command=self.diminuir_quantidade).pack(side="bottom", fill="x", pady=1)
+        
+        frame_botoes = ctk.CTkFrame(main_frame, fg_color="white")
+        frame_botoes.pack(fill="x", pady=20)
+        
+        ctk.CTkButton(frame_botoes, text="Salvar", command=self.salvar, 
+                     fg_color="#27ae60", hover_color="#219a52", height=40, 
+                     font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold")).pack(side="left", padx=10)
+        ctk.CTkButton(frame_botoes, text="Cancelar", command=self.destroy, 
+                     fg_color="#e74c3c", hover_color="#c0392b", height=40,
+                     font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold")).pack(side="left", padx=10)
+        
+    def aumentar_quantidade(self):
+        self.quantidade_valor += 1
+        self.quantidade_var.set(str(self.quantidade_valor))
+        
+    def diminuir_quantidade(self):
+        if self.quantidade_valor > 0:
+            self.quantidade_valor -= 1
+            self.quantidade_var.set(str(self.quantidade_valor))
+            
+    def salvar(self):
+        estoque = self.estoque_entry.get()
+        tipo_mov = self.tipo_mov_entry.get()
+        quantidade = self.quantidade_var.get()
+        
+        if not estoque or not tipo_mov or quantidade == "0":
+            messagebox.showerror("Erro", "Preencha todos os campos corretamente.")
+            return
+            
+        tela_inclusao = TelaInclusaoSerie(self, self.produto_selecionado_info, estoque, tipo_mov, quantidade)
+        tela_inclusao.transient(self)
+        tela_inclusao.grab_set()
+        self.wait_window(tela_inclusao)
+        
+        self.destroy()
+
+
+class TelaInclusaoSerie(ctk.CTkToplevel):
+    def __init__(self, parent, produto_selecionado_info, estoque, tipo_mov, quantidade):
+        super().__init__(parent)
+        self.parent = parent
+        self.produto_selecionado_info = produto_selecionado_info
+        self.estoque = estoque
+        self.tipo_mov = tipo_mov
+        self.quantidade = int(quantidade)
+        self.title("Inclusão de Série")
+        self.geometry("800x600")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+        
+        self.criar_widgets()
+        
+    def criar_widgets(self):
+        main_frame = ctk.CTkFrame(self, fg_color="white")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        titulo = ctk.CTkLabel(main_frame, text="INCLUSÃO DE SÉRIE", 
+                             font=ctk.CTkFont(family="Segoe UI Emoji", size=18, weight="bold"),
+                             text_color="#2c3e50")
+        titulo.pack(pady=(0, 20))
+        
+        frame_botoes_top = ctk.CTkFrame(main_frame, fg_color="white")
+        frame_botoes_top.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkButton(frame_botoes_top, text="Processar", command=self.processar,
+                     fg_color="#27ae60", hover_color="#219a52", height=35,
+                     font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold")).pack(side="left", padx=5)
+        ctk.CTkButton(frame_botoes_top, text="Cancelar", command=self.destroy,
+                     fg_color="#e74c3c", hover_color="#c0392b", height=35,
+                     font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold")).pack(side="left", padx=5)
+
+        container_campos = ctk.CTkFrame(main_frame, fg_color="#f8f9fa", corner_radius=10)
+        container_campos.pack(fill="x", pady=(0, 15))
+        
+        campos_inner = ctk.CTkFrame(container_campos, fg_color="transparent")
+        campos_inner.pack(fill="x", padx=15, pady=15)
+        
+        ctk.CTkLabel(campos_inner, text="Estoque:", text_color="black",
+                    font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold")).pack(anchor="w", pady=2)
+        
+        self.estoque_entry = ctk.CTkEntry(campos_inner, fg_color="white", text_color="black", 
+                                         border_color="#c0c0c0", height=35)
+        self.estoque_entry.insert(0, self.estoque)
+        self.estoque_entry.configure(state="readonly")
+        self.estoque_entry.pack(fill="x", pady=(0, 10))
+        
+        ctk.CTkLabel(campos_inner, text="Produto:", text_color="black",
+                    font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold")).pack(anchor="w", pady=2)
+        
+        self.produto_entry = ctk.CTkEntry(campos_inner, fg_color="white", text_color="black", 
+                                         border_color="#c0c0c0", height=35)
+        self.produto_entry.insert(0, self.produto_selecionado_info['nome'])
+        self.produto_entry.configure(state="readonly")
+        self.produto_entry.pack(fill="x", pady=(0, 5))
+        
+        frame_tree = ctk.CTkFrame(main_frame, fg_color="white")
+        frame_tree.pack(fill="both", expand=True)
+        
+        colunas = ("seq", "serie", "alternativa")
+        self.treeview = ttk.Treeview(frame_tree, columns=colunas, show="headings", height=20)
+        
+        self.treeview.heading("seq", text="Seq.")
+        self.treeview.heading("serie", text="Nº Série")
+        self.treeview.heading("alternativa", text="Nº Série Alternativa")
+        
+        self.treeview.column("seq", width=80, anchor="center")
+        self.treeview.column("serie", width=300, anchor="center")
+        self.treeview.column("alternativa", width=300, anchor="center")
+        
+        for i in range(1, self.quantidade + 1):
+            item = self.treeview.insert("", "end", values=(i, "", ""))
+            self.criar_campos_edicao(item)
+        
+        scrollbar = ttk.Scrollbar(frame_tree, orient="vertical", command=self.treeview.yview)
+        self.treeview.configure(yscrollcommand=scrollbar.set)
+        
+        self.treeview.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+    def criar_campos_edicao(self, item):
+        valores = self.treeview.item(item, 'values')
+        
+        for col_idx in [1, 2]:
+            x, y, width, height = self.treeview.bbox(item, f"#{col_idx + 1}")
+            
+            entry = ctk.CTkEntry(self.treeview, width=width-2, height=height-2,
+                               fg_color="white", text_color="black", border_color="#3498db")
+            entry.place(x=x+1, y=y+1)
+            entry.insert(0, valores[col_idx])
+            entry.bind("<Return>", lambda e, i=item, c=col_idx: self.salvar_edicao(i, c))
+            entry.bind("<FocusOut>", lambda e, i=item, c=col_idx: self.salvar_edicao(i, c))
+            
+            self.treeview.set(item, f"#{col_idx + 1}", "")
+    
+    def salvar_edicao(self, item, col_idx):
+        for widget in self.treeview.winfo_children():
+            if isinstance(widget, ctk.CTkEntry):
+                x, y, _, _ = self.treeview.bbox(item, f"#{col_idx + 1}")
+                if widget.winfo_x() == x+1 and widget.winfo_y() == y+1:
+                    novo_valor = widget.get()
+                    valores = list(self.treeview.item(item, 'values'))
+                    valores[col_idx] = novo_valor
+                    self.treeview.item(item, values=valores)
+                    widget.destroy()
+                    break
+    
+    def processar(self):
+        if not hasattr(self, 'treeview'):
+            messagebox.showerror("Erro", "Treeview não foi inicializado.")
+            return
+
+        series = []
+        for child in self.treeview.get_children():
+            values = self.treeview.item(child)['values']
+            seq = values[0]
+            serie = values[1]
+            alternativa = values[2]
+            
+            if not serie:
+                messagebox.showerror("Erro", f"Preencha o número de série para a sequência {seq}.")
+                return
+                
+            series.append({
+                "serie": serie,
+                "alternativa": alternativa,
+                "estoque": self.estoque,
+                "status": "Ativa"
+            })
+        
+        app = self.parent.parent
+        codigo_produto = self.produto_selecionado_info['codigo']
+        
+        if codigo_produto not in app.dados_series:
+            app.dados_series[codigo_produto] = []
+            
+        app.dados_series[codigo_produto].extend(series)
+        
+        app.salvar_dados_json()
+        
+        if hasattr(app, 'treeview_series'):
+            for item in app.treeview_series.get_children():
+                app.treeview_series.delete(item)
+                
+            if codigo_produto in app.dados_series:
+                for serie in app.dados_series[codigo_produto]:
+                    app.treeview_series.insert("", "end", values=(
+                        serie["serie"],
+                        serie["alternativa"],
+                        serie["estoque"],
+                        serie["status"]
+                    ))
+        
+        messagebox.showinfo("Sucesso", "Séries adicionadas com sucesso!")
+        self.destroy()
+
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -98,7 +386,6 @@ class App(ctk.CTk):
         self.state('zoomed')
     
     def limpar_area_conteudo(self):
-        """Limpar área de conteúdo de forma segura"""
         for widget in self.area_conteudo.winfo_children():
             try:
                 widget.destroy()
@@ -133,7 +420,7 @@ class App(ctk.CTk):
             valores = item['values']
             
             for produto in self.dados_produtos:
-                if produto["codigo"] == valores[1]:  # valores[1] é o código
+                if produto["codigo"] == valores[1]:
                     self.abrir_tela_produto(produto)
                     break
     
@@ -169,12 +456,11 @@ class App(ctk.CTk):
         self.carregar_dados_json()
         
         for produto in self.dados_produtos:
-            # Determinar o ícone e cor com base no controle de série
             if produto["serie"] == "Sim":
-                texto_serie = "✔️"  # Ícone de check verde
+                texto_serie = "✔️"
                 tag = 'verde'
             else:
-                texto_serie = "❌"  # Ícone de X vermelho
+                texto_serie = "❌"
                 tag = 'vermelho'
                 
             self.treeview_produtos.insert("", "end", values=(
@@ -219,7 +505,6 @@ class App(ctk.CTk):
                         break
             
             if corresponde:
-                # Determinar o ícone com base no controle de série
                 if produto["serie"] == "Sim":
                     texto_serie = "✔️"
                     tag = 'verde'
@@ -324,7 +609,7 @@ class App(ctk.CTk):
         titulo_label = ctk.CTkLabel(
             self.area_conteudo,
             text="Buscar Unidade",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold"),
             text_color="black"
         )
         titulo_label.pack(pady=(10, 20), anchor="w")
@@ -356,7 +641,7 @@ class App(ctk.CTk):
         info_label = ctk.CTkLabel(
             self.area_conteudo,
             text="Lista de unidades aparecerá aqui",
-            font=ctk.CTkFont(size=14),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=14),
             text_color="#404040"
         )
         info_label.pack(pady=50)
@@ -368,7 +653,7 @@ class App(ctk.CTk):
         titulo_label = ctk.CTkLabel(
             self.area_conteudo,
             text="Gerenciar Unidades",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold"),
             text_color="black"
         )
         titulo_label.pack(pady=(10, 20), anchor="w")
@@ -401,7 +686,7 @@ class App(ctk.CTk):
         info_label = ctk.CTkLabel(
             self.area_conteudo,
             text="Interface de gerenciamento de unidades aparecerá aqui",
-            font=ctk.CTkFont(size=16),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=16),
             text_color="#404040"
         )
         info_label.pack(pady=50)
@@ -448,127 +733,120 @@ class App(ctk.CTk):
         self.limpar_area_conteudo()
 
     def abrir_tela_produtos(self):
-        # Remover marca d'água de forma mais segura
         if hasattr(self, 'label_marcadagua'):
             self.label_marcadagua.place_forget()
         
-        # Limpar área de conteúdo de forma mais eficiente
         self.limpar_area_conteudo()
         
-        # Criar frame principal
         frame_produtos = ctk.CTkFrame(self.area_conteudo, fg_color="white")
         frame_produtos.pack(fill="both", expand=True, padx=0, pady=0)
         
-        # Adicionar pequeno delay para garantir que o frame foi renderizado
         self.after(50, lambda: self._construir_conteudo_produtos(frame_produtos))
 
     def _aplicar_estilo_notebook(self):
-        """Aplicar estilo consistentemente ao notebook"""
         try:
             style = ttk.Style()
-            style.configure("TNotebook.Tab", padding=[0, 0], font=('Roboto', 14, 'bold'))
+            style.configure("TNotebook.Tab", padding=[0, 0], font=('Segoe UI Emoji', 14, 'bold'))
         except Exception as e:
             print(f"Erro ao aplicar estilo do notebook: {e}")
 
     def _construir_conteudo_produtos(self, frame_pai):
-        """Construir o conteúdo dos produtos após o frame principal estar renderizado"""
         try:
-            # NOTEBOOK PARA AS ABAS
-            self.notebook_produtos = ttk.Notebook(frame_pai)
-            self.notebook_produtos.pack(fill="both", expand=True, padx=10, pady=10)
+            self.frame_notebook_container = ctk.CTkFrame(frame_pai, fg_color="white")
+            self.frame_notebook_container.pack(fill="both", expand=True, padx=10, pady=10)
+            
+            self.notebook_produtos = ttk.Notebook(self.frame_notebook_container)
+            self.notebook_produtos.pack(fill="both", expand=True)
 
-            # APLICAR ESTILO CONSISTENTEMENTE
             self._aplicar_estilo_notebook()
 
-            # Frame para a aba de Produtos
             self.frame_aba_produtos = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
             self.notebook_produtos.add(self.frame_aba_produtos, text="Produtos")
 
-            # Frame para a aba de Séries
             self.frame_aba_series = ctk.CTkFrame(self.notebook_produtos, fg_color="white")
             self.notebook_produtos.add(self.frame_aba_series, text="Séries")
 
-            # Inicialmente desabilitar a aba de séries
             self.notebook_produtos.tab(1, state="disabled")
 
-            # Construir o conteúdo das abas com pequeno delay
             self.after(100, self._finalizar_construcao_produtos)
             
         except Exception as e:
             print(f"Erro ao construir tela de produtos: {e}")
 
     def _finalizar_construcao_produtos(self):
-        """Finalizar a construção após tudo estar preparado"""
         try:
             self.construir_aba_produtos()
             self.construir_aba_series()
             
-            # AGORA ADICIONAR OS BOTÕES ENTRE O TREEVIEW E AS ABAS
-            self._adicionar_botoes_entre_abas()
-            
-            # Forçar atualização final
             self.update_idletasks()
         except Exception as e:
             print(f"Erro ao finalizar construção: {e}")
 
-    def _adicionar_botoes_entre_abas(self):
-        """Adicionar botões entre o Treeview e as abas"""
-        # Criar frame para os botões que será posicionado entre as abas
-        frame_botoes = ctk.CTkFrame(self.area_conteudo, height=50, fg_color="#f0f0f0", corner_radius=0)
-        frame_botoes.pack(fill="x", pady=(0, 10), before=self.notebook_produtos)
-        frame_botoes.pack_propagate(False)
+    def construir_aba_produtos(self):
+        frame_principal = ctk.CTkFrame(self.frame_aba_produtos, fg_color="white")
+        frame_principal.pack(fill="both", expand=True)
+
+        frame_botoes_superior = ctk.CTkFrame(frame_principal, height=50, fg_color="#f0f0f0")
+        frame_botoes_superior.pack(fill="x", pady=(0, 10))
+        frame_botoes_superior.pack_propagate(False)
+
+        container_botoes = ctk.CTkFrame(frame_botoes_superior, fg_color="transparent")
+        container_botoes.pack(fill="x", padx=10, pady=5)
 
         btn_novo = ctk.CTkButton(
-            frame_botoes,
+            container_botoes,
             text="Novo",
             width=80,
-            height=30,
+            height=32,
             fg_color="#4CAF50",
             hover_color="#54C057",
             border_color="#429647",
             border_width=2,
             text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"),
             command=self.abrir_tela_produto
         )
-        btn_novo.pack(side="left", padx=(10, 5), pady=10)
+        btn_novo.pack(side="left", padx=(0, 5))
 
         btn_editar = ctk.CTkButton(
-            frame_botoes,
+            container_botoes,
             text="Editar",
             width=80,
-            height=30,
+            height=32,
             fg_color="#2196F3",
             hover_color="#46A4F1",
             border_color="#0b7dda",
             border_width=2,
             text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"),
             command=self.editar_produto
         )
-        btn_editar.pack(side="left", padx=5, pady=10)
+        btn_editar.pack(side="left", padx=5)
 
         btn_excluir = ctk.CTkButton(
-            frame_botoes,
+            container_botoes,
             text="Excluir",
             width=80,
-            height=30,
+            height=32,
             fg_color="#f44336",
             hover_color="#da190b",
             border_color="#da190b",
             border_width=2,
             text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"),
             command=self.excluir_produto
         )
-        btn_excluir.pack(side="left", padx=5, pady=10)
+        btn_excluir.pack(side="left", padx=5)
 
         mais_opcoes = ctk.CTkOptionMenu(
-            frame_botoes,
+            container_botoes,
             values=[
                 "⬆Exportar dados", 
                 "💾Importar dados",
                 "📄Relatório"
             ],
-            width=120,
-            height=30,
+            width=80,
+            height=32,
             font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
             fg_color="#9E9E9E",
             button_color="#9E9E9E",
@@ -577,38 +855,38 @@ class App(ctk.CTk):
             dropdown_text_color="black",
             dropdown_hover_color="#f0f0f0",
         )
-        mais_opcoes.set("Mais opções")
-        mais_opcoes.pack(side="left", padx=5, pady=10)
+        mais_opcoes.set("Mais")
+        mais_opcoes.pack(side="left", padx=5)
 
-        espaco_vazio = ctk.CTkFrame(frame_botoes, fg_color="transparent")
-        espaco_vazio.pack(side="left", fill="x", expand=True)
+        espaco_flexivel = ctk.CTkFrame(container_botoes, fg_color="transparent")
+        espaco_flexivel.pack(side="left", fill="x", expand=True)
 
         btn_sair = ctk.CTkButton(
-            frame_botoes,
+            container_botoes,
             text="Sair",
             width=80,
-            height=30,
+            height=32,
             fg_color="#f44336",
             hover_color="#da190b",
             border_color="#da190b",
             border_width=2,
             text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"),
             command=self.fechar_tela_produtos
         )
-        btn_sair.pack(side="right", padx=10, pady=10)
+        btn_sair.pack(side="right", padx=(5, 0))
 
-    def construir_aba_produtos(self):
-        frame_principal = ctk.CTkFrame(self.frame_aba_produtos, fg_color="white")
-        frame_principal.pack(fill="both", expand=True)
+        frame_conteudo = ctk.CTkFrame(frame_principal, fg_color="white")
+        frame_conteudo.pack(fill="both", expand=True)
 
-        filtros_frame = ctk.CTkFrame(frame_principal, width=250, fg_color="#f9f9f9")
+        filtros_frame = ctk.CTkFrame(frame_conteudo, width=250, fg_color="#f9f9f9")
         filtros_frame.pack(side="left", fill="y", padx=(0, 10))
         filtros_frame.pack_propagate(False)
 
         filtro_label = ctk.CTkLabel(
             filtros_frame,
             text="Filtros",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold"),
             text_color="black"
         )
         filtro_label.pack(pady=(10, 5))
@@ -634,7 +912,8 @@ class App(ctk.CTk):
                 border_width=1,
                 border_color="#c0c0c0",
                 height=28,
-                text_color="black"
+                text_color="black",
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=12)
             )
             entry.grid(row=0, column=0, sticky="ew", padx=(2, 0), pady=2)
             self.filtro_entries.append(entry)  
@@ -648,16 +927,17 @@ class App(ctk.CTk):
                 hover_color="#c0c0c0",
                 text_color="black",
                 corner_radius=5,
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
                 command=lambda e=entry: e.delete(0, 'end')  
             )
             btn_clear.grid(row=0, column=1, padx=(2, 2), pady=2)
 
         btn_pesquisar = ctk.CTkButton(
             filtros_frame,
-            text="Pesuisar🔎",
+            text="Pesquisar🔎",
             height=35,
             width=120,
-            font=ctk.CTkFont(family="Segoe UI Emoji", size=20, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold"),
             fg_color="#4CAF50",
             hover_color="#54C057",
             border_color="#429647",
@@ -667,21 +947,23 @@ class App(ctk.CTk):
         )
         btn_pesquisar.pack(pady=10)
 
-        lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
+        lista_frame = ctk.CTkFrame(frame_conteudo, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
 
-        # CONFIGURAÇÃO DO ESTILO DO TREEVIEW
         estilo = ttk.Style()
         estilo.theme_use("clam")
         
-        # Configurar o estilo do Treeview
+        estilo.map("Treeview", 
+        background=[("selected", "#87CEEB")],
+        foreground=[("selected", "black")])
+        
         estilo.configure("Treeview.Heading", 
-                        font=("Roboto", 13, "bold"), 
+                        font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"), 
                         background="#ebebeb",
                         foreground="black")
         
         estilo.configure("Treeview", 
-                        font=("Segoe UI", 12), 
+                        font=ctk.CTkFont(family="Segoe UI Emoji", size=12), 
                         background="white", 
                         fieldbackground="white", 
                         foreground="black",
@@ -690,7 +972,6 @@ class App(ctk.CTk):
         colunas = ("serie", "codigo", "nome", "marca", "valor", "estoque")
         self.treeview_produtos = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
 
-        # CONFIGURAR AS TAGS NO TREEVIEW - APENAS PARA A COLUNA SÉRIE
         self.treeview_produtos.tag_configure('verde', foreground='green')
         self.treeview_produtos.tag_configure('vermelho', foreground='red')
 
@@ -714,9 +995,7 @@ class App(ctk.CTk):
         self.treeview_produtos.pack(side="left", fill="both", expand=True)
         barra_rolagem.pack(side="right", fill="y")
 
-        # POPULAR O TREEVIEW - APLICANDO TAGS APENAS NA COLUNA SÉRIE
         for produto in self.dados_produtos:
-            # Determinar o ícone e tag com base no controle de série
             if produto["serie"] == "Sim":
                 texto_serie = "✔️"
                 tag = 'verde'
@@ -724,7 +1003,6 @@ class App(ctk.CTk):
                 texto_serie = "❌"
                 tag = 'vermelho'
                 
-            # Inserir o item com a tag
             item_id = self.treeview_produtos.insert("", "end", values=(
                 texto_serie,
                 produto["codigo"],
@@ -732,15 +1010,14 @@ class App(ctk.CTk):
                 produto["marca"],
                 produto["valor"],
                 produto["estoque"]
-            ), tags=(tag,))
+            ))
             
-            # APENAS A COLUNA SÉRIE TERÁ COR - aplicar a tag apenas à primeira coluna
-            # As outras colunas manterão a cor padrão (preto)
             self.treeview_produtos.set(item_id, "serie", texto_serie)
+            self.treeview_produtos.item(item_id, tags=(tag,))
 
         self.treeview_produtos.bind("<<TreeviewSelect>>", self.on_produto_selecionado)
         self.treeview_produtos.bind("<Double-Button-1>", self.abrir_edicao_duplo_clique)
-        
+
     def abrir_edicao_duplo_clique(self, event):
         item_selecionado = self.treeview_produtos.selection()
         if item_selecionado:
@@ -754,7 +1031,6 @@ class App(ctk.CTk):
                     break
 
     def construir_aba_series(self):
-        # REAPLICAR ESTILO ANTES DE CONSTRUIR
         self._aplicar_estilo_notebook()
         
         for widget in self.frame_aba_series.winfo_children():
@@ -763,19 +1039,96 @@ class App(ctk.CTk):
         frame_principal = ctk.CTkFrame(self.frame_aba_series, fg_color="white")
         frame_principal.pack(fill="both", expand=True)
 
+        frame_botoes_superior = ctk.CTkFrame(frame_principal, height=50, fg_color="#f0f0f0")
+        frame_botoes_superior.pack(fill="x", pady=(0, 10))
+        frame_botoes_superior.pack_propagate(False)
+
+        container_botoes = ctk.CTkFrame(frame_botoes_superior, fg_color="transparent")
+        container_botoes.pack(fill="x", padx=10, pady=5)
+
+        btn_importar = ctk.CTkButton(
+            container_botoes,
+            text="⬇️Importar",
+            width=100,
+            height=32,
+            fg_color="#4CAF50",
+            hover_color="#54C057",
+            text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold")
+        )
+        btn_importar.pack(side="left", padx=(0, 5))
+
+        btn_incluir = ctk.CTkButton(
+            container_botoes,
+            text="➕Incluir",
+            width=80,
+            height=32,
+            fg_color="#2196F3",
+            hover_color="#46A4F1",
+            text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold"),
+            command=self.incluir_serie
+        )
+        btn_incluir.pack(side="left", padx=5)
+
+        btn_editar_serie = ctk.CTkButton(
+            container_botoes,
+            text="✏️Editar",
+            width=80,
+            height=32,
+            fg_color="#FF9800",
+            hover_color="#FFB74D",
+            text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold")
+        )
+        btn_editar_serie.pack(side="left", padx=5)
+
+        btn_excluir_serie = ctk.CTkButton(
+            container_botoes,
+            text="🗑️Excluir",
+            width=80,
+            height=32,
+            fg_color="#f44336",
+            hover_color="#da190b",
+            text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold")
+        )
+        btn_excluir_serie.pack(side="left", padx=5)
+
+        espaco_flexivel = ctk.CTkFrame(container_botoes, fg_color="transparent")
+        espaco_flexivel.pack(side="left", fill="x", expand=True)
+
+        btn_cancelar = ctk.CTkButton(
+            container_botoes,
+            text="❌Cancelar",
+            width=80,
+            height=32,
+            fg_color="#757575",
+            hover_color="#9E9E9E",
+            text_color="white",
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold")
+        )
+        btn_cancelar.pack(side="right", padx=(5, 0))
+
         info_frame = ctk.CTkFrame(frame_principal, height=40, fg_color="#e8f5e9")
         info_frame.pack(fill="x", pady=(0, 10))
         info_frame.pack_propagate(False)
 
+        info_container = ctk.CTkFrame(info_frame, fg_color="transparent")
+        info_container.pack(fill="x", padx=10, pady=5)
+
         if hasattr(self, 'produto_selecionado_info') and self.produto_selecionado_info:
             info_text = f"Produto selecionado: {self.produto_selecionado_info['nome']} (Código: {self.produto_selecionado_info['codigo']})"
             info_label = ctk.CTkLabel(
-                info_frame,
+                info_container,
                 text=info_text,
-                font=ctk.CTkFont(size=14, weight="bold"),
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold"),
                 text_color="#2e7d32"
             )
-            info_label.pack(side="left", padx=10, pady=10)
+            info_label.pack(side="left")
+
+        espaco_vazio = ctk.CTkFrame(info_container, fg_color="transparent")
+        espaco_vazio.pack(side="left", fill="x", expand=True)
 
         produto_info = None
         for produto in self.dados_produtos:
@@ -790,7 +1143,7 @@ class App(ctk.CTk):
             mensagem_label = ctk.CTkLabel(
                 mensagem_frame,
                 text="Este produto não é controlado por série",
-                font=ctk.CTkFont(size=16, weight="bold"),
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold"),
                 text_color="#757575"
             )
             mensagem_label.place(relx=0.5, rely=0.5, anchor="center")
@@ -803,7 +1156,7 @@ class App(ctk.CTk):
         filtro_label = ctk.CTkLabel(
             filtros_frame,
             text="Filtros",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold"),
             text_color="black"
         )
         filtro_label.pack(pady=(10, 5))
@@ -826,7 +1179,8 @@ class App(ctk.CTk):
                 border_width=1,
                 border_color="#c0c0c0",
                 height=28,
-                text_color="black"
+                text_color="black",
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=12)
             )
             entry.grid(row=0, column=0, sticky="ew", padx=(2, 0), pady=2)
             self.filtro_series_entries.append(entry)  
@@ -840,17 +1194,17 @@ class App(ctk.CTk):
                 hover_color="#c0c0c0",
                 text_color="black",
                 corner_radius=5,
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=12),
                 command=lambda e=entry: e.delete(0, 'end')
             )
             btn_clear.grid(row=0, column=1, padx=(2, 2), pady=2)
 
-        # BOTÃO DE PESQUISA IGUAL AO DA ABA DE PRODUTOS
         btn_pesquisar_series = ctk.CTkButton(
             filtros_frame,
-            text="Pesuisar🔎",
+            text="Pesquisar🔎",
             height=35,
             width=120,
-            font=ctk.CTkFont(family="Segoe UI Emoji", size=20, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=16, weight="bold"),
             fg_color="#4CAF50",
             hover_color="#54C057",
             border_color="#429647",
@@ -862,6 +1216,12 @@ class App(ctk.CTk):
 
         lista_frame = ctk.CTkFrame(frame_principal, fg_color="white")
         lista_frame.pack(side="right", fill="both", expand=True)
+
+        estilo = ttk.Style()
+        estilo.theme_use("clam")
+        estilo.map("Treeview", 
+        background=[("selected", "#87CEEB")],
+        foreground=[("selected", "black")])
 
         colunas = ("serie", "serie_alternativa", "produto", "estoque", "status", "contrato")
         self.treeview_series = ttk.Treeview(lista_frame, columns=colunas, show="headings", height=20)
@@ -899,46 +1259,48 @@ class App(ctk.CTk):
             empty_label = ctk.CTkLabel(
                 lista_frame,
                 text="Nenhuma série encontrada para este produto",
-                font=ctk.CTkFont(size=14),
+                font=ctk.CTkFont(family="Segoe UI Emoji", size=14),
                 text_color="#757575"
             )
             empty_label.place(relx=0.5, rely=0.5, anchor="center")
+
+    def incluir_serie(self):
+        if not hasattr(self, 'produto_selecionado_info') or not self.produto_selecionado_info:
+            messagebox.showwarning("Aviso", "Nenhum produto selecionado.")
+            return
+            
+        tela_incluir_serie = TelaIncluirSerie(self, self.produto_selecionado_info)
+        tela_incluir_serie.transient(self)
+        tela_incluir_serie.grab_set()
+        self.wait_window(tela_incluir_serie)
 
     def on_produto_selecionado(self, event):
         selected = self.treeview_produtos.selection()
         if selected:
             item = self.treeview_produtos.item(selected[0])
             valores = item['values']
-            codigo = valores[1]  # O código está na segunda coluna (índice 1)
+            codigo = valores[1]
             
-            # Encontrar o produto pelo código
             for produto in self.dados_produtos:
                 if produto["codigo"] == codigo:
                     if produto["serie"] == "Sim":
-                        # Habilitar a aba de séries
                         self.notebook_produtos.tab(1, state="normal")
-                        # REAPLICAR ESTILO
                         self._aplicar_estilo_notebook()
                         self.produto_selecionado = codigo
                         self.produto_selecionado_info = produto
-                        # Atualizar a aba de séries
                         self.construir_aba_series()
                     else:
-                        # Desabilitar a aba de séries
                         self.notebook_produtos.tab(1, state="disabled")
                         self.produto_selecionado = None
                         self.produto_selecionado_info = None
                     break
 
     def fechar_tela_produtos(self):
-        # Limpar de forma mais gradual
         self.limpar_area_conteudo()
         
-        # Restaurar marca d'água com pequeno delay
         self.after(100, self._restaurar_marca_dagua)
 
     def _restaurar_marca_dagua(self):
-        """Restaurar marca d'água de forma controlada"""
         if hasattr(self, 'label_marcadagua') and self.marcadagua_ctk_image:
             self.label_marcadagua.place(relx=0.5, rely=0.5, anchor="center")
     
@@ -1011,7 +1373,7 @@ class App(ctk.CTk):
         user_label = ctk.CTkLabel(
             user_frame,
             text="Usuário:",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold"),
             text_color="black"
             )
         user_label.pack(side="left", padx=(0, 5))
@@ -1019,7 +1381,7 @@ class App(ctk.CTk):
         username_label = ctk.CTkLabel(
             user_frame,
             text="Admin",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=14, weight="bold"),
             text_color="red"
         )
         username_label.pack(side="left")
@@ -1054,7 +1416,7 @@ class App(ctk.CTk):
             text=("Data: 00/00/0000"),
             fg="white",
             bg="black",
-            font=("Arial", 14, "bold")  
+            font=("Segoe UI Emoji", 14, "bold")  
         )
         self.date_label.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 5))
 
@@ -1075,7 +1437,7 @@ class App(ctk.CTk):
             fg_color="#4f8cff", 
             hover_color="#357ae8", 
             text_color="#fff",
-            font=("Segoe UI Emoji", 15, "bold"), 
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"), 
             corner_radius=8, 
             border_color="#357ae8",
             border_width=2,
@@ -1091,7 +1453,7 @@ class App(ctk.CTk):
             fg_color="#ebb000", 
             hover_color="#f1ba13", 
             text_color="#fff",
-            font=("Segoe UI Emoji", 15, "bold"), 
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"), 
             corner_radius=8, 
             border_color="#d19d01",
             border_width=2,
@@ -1108,7 +1470,7 @@ class App(ctk.CTk):
             fg_color="#e74c3c", 
             hover_color="#c0392b", 
             text_color="#fff",
-            font=("Segoe UI Emoji", 15, "bold"), 
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=13, weight="bold"), 
             corner_radius=8, 
             border_width=2,
             border_color="#c0392b"
@@ -1129,7 +1491,8 @@ class App(ctk.CTk):
             border_color="#c0c0c0",
             height=28,  
             text_color="black",
-            width=120
+            width=120,
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12)
         )
         self.unit_entry.pack(side="left", fill="x", expand=False, padx=2, pady=2)
         
@@ -1143,7 +1506,7 @@ class App(ctk.CTk):
             text_color="black",
             corner_radius=5,
             command=self.apagar_unidade,
-            font=ctk.CTkFont(family="Arial", size=18, weight="bold")
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold")
         )
         btn_clear.pack(side="left", padx=(0, 1))
 
@@ -1157,7 +1520,7 @@ class App(ctk.CTk):
             text_color="black",
             corner_radius=5,
             command=self.editar_unidade,
-            font=ctk.CTkFont(family="Arial", size=16, weight="bold")
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12, weight="bold")
         )
         btn_edit.pack(side="left", padx=(0, 1))
 
@@ -1171,7 +1534,7 @@ class App(ctk.CTk):
             text_color="black",
             corner_radius=5,
             command=self.pesquisar_unidade,
-            font=ctk.CTkFont(family="Arial", size=16)
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=12)
         )
         btn_search.pack(side="left")
     
@@ -1381,12 +1744,11 @@ class App(ctk.CTk):
         self.frame_marcdagua.grid_rowconfigure(0, weight=1)
         self.frame_marcdagua.grid_columnconfigure(0, weight=1)
 
-        # Área de conteúdo transparente e no topo
-        self.area_conteudo = ctk.CTkFrame(self.frame_marcdagua, fg_color="transparent")  # Transparente
+        self.area_conteudo = ctk.CTkFrame(self.frame_marcdagua, fg_color="transparent")
         self.area_conteudo.grid(row=0, column=0, sticky="nsew")
         self.area_conteudo.grid_rowconfigure(0, weight=1)
         self.area_conteudo.grid_columnconfigure(0, weight=1)
-        self.area_conteudo.lift()  # Trazer para frente
+        self.area_conteudo.lift()
 
         if self.marcadagua_ctk_image:
             self.label_marcadagua = ctk.CTkLabel(
